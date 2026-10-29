@@ -1,3 +1,10 @@
+import sys
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 """Bot-room relay: 3 Hermes personas talk round-robin, feed dialogue.json."""
 import asyncio
 import datetime
@@ -44,9 +51,9 @@ BOTS = [
     },
     {
         "id": "CHILL",
-        "name": "ม่อตี๋",
+        "name": "หม่อตี๋",
         "color": "#64e1ff",
-        "persona": "ม่อตี๋ น้องชายคนเล็กสุดในร่างซูเปอร์ไซย่าบลู สุภาพ ช่างสังเกต ชอบสะท้อนมุมมองของคนรุ่นใหม่ที่มีต่อสังคมและการพัฒนาประเทศ",
+        "persona": "หม่อตี๋ น้องชายคนเล็กสุดในร่างซูเปอร์ไซย่าบลู สุภาพ ช่างสังเกต ชอบสะท้อนมุมมองของคนรุ่นใหม่ที่มีต่อสังคมและการพัฒนาประเทศ",
     },
 ]
 import urllib.request
@@ -62,7 +69,7 @@ _current_headline_index = 0
 def fetch_all_thai_news():
     global _last_news_fetch, _news_cache_pool
     now = time.time()
-    if now - _last_news_fetch < 120 and _news_cache_pool:
+    if now - _last_news_fetch < 600 and _news_cache_pool:
         return _news_cache_pool
 
     feeds = [
@@ -299,12 +306,12 @@ def clean(raw, bot_id=None):
     text = re.sub(r'เซจ', 'อั่งม้อ', text)
     text = re.sub(r'(?i)joy', 'ตู่', text)
     text = re.sub(r'จอย', 'ตู่', text)
-    text = re.sub(r'(?i)chill', 'ม่อตี๋', text)
-    text = re.sub(r'หม่อตี๋|ม็อบตี๋|มอตี้|มือกตี๋|ม่อตี๋|หมอตี๋', 'ม่อตี๋', text)
-    text = re.sub(r'^(อาม้า|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|อาเจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หม่อตี๋|ม่อตี๋|ม่อตี๋):\s*', '', text)
+    text = re.sub(r'(?i)chill', 'หม่อตี๋', text)
+    text = re.sub(r'หม่อตี๋|ม็อบตี๋|มอตี้|มือกตี๋|หม่อตี๋|หมอตี๋', 'หม่อตี๋', text)
+    text = re.sub(r'^(อาม้า|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|อาเจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หม่อตี๋|หม่อตี๋|หม่อตี๋):\s*', '', text)
     
     # Strip leading name/pronoun artifacts that model may prepend without colon
-    LEADING_STRIP = r'^(คุณคือ|คุณตู่|อาม้า|ม้าลูก|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|ตั่ว|อาเจ้|เจ้า|เจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หม่อตี๋|ม่อตี๋|ม่อตี๋|ม้า|ม้อ|เฮีย|เฮี๊ย|คุญ่า|อั๊ว|พวกลื้อ|อ้า๊ย|หลี่เฮีย|พี่ๆ)(\s*[:：]?\s*)'
+    LEADING_STRIP = r'^(คุณคือ|คุณตู่|อาม้า|ม้าลูก|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|ตั่ว|อาเจ้|เจ้า|เจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หม่อตี๋|หม่อตี๋|หม่อตี๋|ม้า|ม้อ|เฮีย|เฮี๊ย|คุญ่า|อั๊ว|พวกลื้อ|อ้า๊ย|หลี่เฮีย|พี่ๆ)(\s*[:：]?\s*)'
     prev = None
     while prev != text:
         prev = text
@@ -359,7 +366,7 @@ def ask(bot, history):
     )
     proc = None
     try:
-        print("DEBUG: prompt=", prompt[:200])
+        # print("DEBUG: prompt=", prompt[:200])
         print("DEBUG: model=", "laguna:free")
         proc = subprocess.run(
             [HERMES, "chat", "-q", prompt, "-Q", "--provider", "openrouter", "--model", "laguna:free"],
@@ -399,6 +406,7 @@ def make_audio(bot_id, text):
         cfg = VOICE_CONFIG.get(bot_id, {"voice": "th-TH-NiwatNeural", "rate": "+0%", "pitch_factor": 1.0})
         pf = cfg.get("pitch_factor", 1.0)
         safe_text = re.sub(r'[\s\-เแโใไ]+$', '', text).strip()
+        phonetic_text = safe_text.replace("หม่อตี๋", "ม่อตี๋") if bot_id in ["MOM", "JOY"] else safe_text
         if not safe_text:
             return None
         h = hashlib.md5((bot_id + safe_text + cfg["rate"] + str(pf)).encode("utf-8")).hexdigest()[:12]
@@ -409,14 +417,14 @@ def make_audio(bot_id, text):
             async def _gen():
                 # Attempt 1: rate only via edge-tts (never send pitch directly to avoid NoAudioReceived)
                 try:
-                    comm = edge_tts.Communicate(safe_text, cfg["voice"], rate=cfg["rate"])
+                    comm = edge_tts.Communicate(phonetic_text, cfg["voice"], rate=cfg["rate"])
                     await comm.save(tmp_path)
                     return
                 except Exception:
                     pass
                 # Attempt 2: default rate
                 try:
-                    comm = edge_tts.Communicate(safe_text, cfg["voice"])
+                    comm = edge_tts.Communicate(phonetic_text, cfg["voice"])
                     await comm.save(tmp_path)
                     return
                 except Exception:
@@ -424,9 +432,9 @@ def make_audio(bot_id, text):
                 # Attempt 3: Niwat fallback
                 try:
                     if bot_id in ["MOM", "JOY"]:
-                        comm = edge_tts.Communicate(safe_text, "th-TH-PremwadeeNeural")
+                        comm = edge_tts.Communicate(phonetic_text, "th-TH-PremwadeeNeural")
                     else:
-                        comm = edge_tts.Communicate(safe_text, "th-TH-NiwatNeural")
+                        comm = edge_tts.Communicate(phonetic_text, "th-TH-NiwatNeural")
                     await comm.save(tmp_path)
                     return
                 except Exception as ex:
@@ -501,7 +509,7 @@ def main():
                 save(msgs)
             # โหมดประหยัดโควตา: เรียกข่างครั้งละ 300 วิ (เดิ 5 สก. ซึ่งหมดโควตาฟรี/วันทันทที)
             # ประหยัดให cron สามารถใช โมเดลฟรีย้ด ในเวลาตางห นได้
-            time.sleep(300)
+            time.sleep(600)  # อัปเดตบทสนทนาข่าว Talk of The Town ทุก 10 นาที  # อัปเดตบทสนทนาข่าว Talk of The Town ทุก 10 นาที
 
 
 if __name__ == "__main__":

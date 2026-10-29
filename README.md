@@ -12,7 +12,7 @@
 | **ไถ่ (BOSS)** | 👑 พี่ใหญ่ · ตั่วเฮีย | ร่าง **Ultra Instinct** ผมสีเงินประกายแพลทินัม สุขุม น่านับถือ เชี่ยวชาญการเมืองและภาพรวมเศรษฐกิจ | `th-TH-NiwatNeural`<br>Rate: `-4%`, Pitch Factor: `0.95` |
 | **ตู่ (JOY)** | 🌸 อาเจ้ · แม่บ้านใหญ่ | ร่าง **Super Saiyan หญิง** สายฮาพลังล้นเหลือ ชอบติดตามข่าวการเมืองและกระแสสังคม | `th-TH-PremwadeeNeural`<br>Rate: `-5%`, Pitch Factor: `0.94` (FFmpeg) |
 | **อั่งม้อ (SAGE)** | ⚡ หยี่เฮีย · นักลงทุน | ร่าง **Super Saiyan ผมทองสุขุม** วิเคราะห์นโยบายรัฐบาล งบประมาณ ตัวเลขเศรษฐกิจและปากท้อง | `th-TH-NiwatNeural`<br>Rate: `+0%`, Pitch Factor: `1.00` |
-| **ม่อตี๋ (CHILL)** | 🔷 น้องเล็กสุด | ร่าง **Super Saiyan Blue** สุภาพ ช่างสังเกต สะท้อนมุมมองคนรุ่นใหม่ที่มีต่อสังคม | `th-TH-NiwatNeural`<br>Rate: `-8%`, Pitch Factor: `1.05` |
+| **หม่อตี๋ (CHILL)** | 🔷 น้องเล็กสุด | ร่าง **Super Saiyan Blue** สุภาพ ช่างสังเกต สะท้อนมุมมองคนรุ่นใหม่ที่มีต่อสังคม | `th-TH-NiwatNeural`<br>Rate: `-8%`, Pitch Factor: `1.05` |
 
 ---
 
@@ -32,7 +32,7 @@
 
 3. **Autonomous Multi-Agent Dialogue Engine (`relay.py`):**
    - ดึงข่าวจริงประจำวันแบบสดๆ (Live RSS News จาก ThaiPBS, มติชน, ข่าวสด, ไทยรัฐ)
-   - ระบบหมุนเวียนหัวข้อ (Talk of The Town Sliding Window Rotation) ป้องกันการวนลูปซ้ำ
+   - ระบบหมุนเวียนหัวข้อทุก 10 นาที (Talk of The Town Sliding Window Rotation) ป้องกันการวนลูปซ้ำ
    - ประมวลผลบทสนทนาแบบผลัดกันพูด (Round-Robin) ผ่าน Hermes CLI / OpenRouter LLM
    - ทำความสะอาดข้อความ ขัดเกลาคำลงท้าย (เช่น นะลูก, จ้ะ) และลบสัญลักษณ์ส่วนเกินโดยอัตโนมัติ
 
