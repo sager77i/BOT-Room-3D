@@ -1299,7 +1299,6 @@ function sanitizeBotNames(text) {
     .replace(/\bfutures\b/gi, "ฟิวเจอร์ส")
     .replace(/\bperpetual\b/gi, "เพอร์เพทชวล")
     .replace(/\busd\b|\$/gi, "ดอลลาร์")
-    .replace(/[a-zA-Z]+/g, "")
     .replace(/[\[\]\(\):/\\_~*`><]+/g, " ")
     .replace(/^[.\s'",\-]+/, "")
     .replace(/[๐-๙]/g, c => "0123456789"["๐๑๒๓๔๕๖๗๘๙".indexOf(c)])
