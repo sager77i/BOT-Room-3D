@@ -44,9 +44,9 @@ BOTS = [
     },
     {
         "id": "CHILL",
-        "name": "หม่อตี๋",
+        "name": "ม่อตี๋",
         "color": "#64e1ff",
-        "persona": "หม่อตี๋ น้องชายคนเล็กสุดในร่างซูเปอร์ไซย่าบลู สุภาพ ช่างสังเกต ชอบสะท้อนมุมมองของคนรุ่นใหม่ที่มีต่อสังคมและการพัฒนาประเทศ",
+        "persona": "ม่อตี๋ น้องชายคนเล็กสุดในร่างซูเปอร์ไซย่าบลู สุภาพ ช่างสังเกต ชอบสะท้อนมุมมองของคนรุ่นใหม่ที่มีต่อสังคมและการพัฒนาประเทศ",
     },
 ]
 import urllib.request
@@ -299,12 +299,12 @@ def clean(raw, bot_id=None):
     text = re.sub(r'เซจ', 'อั่งม้อ', text)
     text = re.sub(r'(?i)joy', 'ตู่', text)
     text = re.sub(r'จอย', 'ตู่', text)
-    text = re.sub(r'(?i)chill', 'หม่อตี๋', text)
-    text = re.sub(r'หหม่อตี๋|ม็อบตี๋|มอตี้|มือกตี๋|ม่อตี๋|หมอตี๋', 'หม่อตี๋', text)
-    text = re.sub(r'^(อาม้า|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|อาเจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หหม่อตี๋|หม่อตี๋|ม่อตี๋):\s*', '', text)
+    text = re.sub(r'(?i)chill', 'ม่อตี๋', text)
+    text = re.sub(r'หม่อตี๋|ม็อบตี๋|มอตี้|มือกตี๋|ม่อตี๋|หมอตี๋', 'ม่อตี๋', text)
+    text = re.sub(r'^(อาม้า|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|อาเจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หม่อตี๋|ม่อตี๋|ม่อตี๋):\s*', '', text)
     
     # Strip leading name/pronoun artifacts that model may prepend without colon
-    LEADING_STRIP = r'^(คุณคือ|คุณตู่|อาม้า|ม้าลูก|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|ตั่ว|อาเจ้|เจ้า|เจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หหม่อตี๋|หม่อตี๋|ม่อตี๋|ม้า|ม้อ|เฮีย|เฮี๊ย|คุญ่า|อั๊ว|พวกลื้อ|อ้า๊ย|หลี่เฮีย|พี่ๆ)(\s*[:：]?\s*)'
+    LEADING_STRIP = r'^(คุณคือ|คุณตู่|อาม้า|ม้าลูก|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|ตั่ว|อาเจ้|เจ้า|เจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หม่อตี๋|ม่อตี๋|ม่อตี๋|ม้า|ม้อ|เฮีย|เฮี๊ย|คุญ่า|อั๊ว|พวกลื้อ|อ้า๊ย|หลี่เฮีย|พี่ๆ)(\s*[:：]?\s*)'
     prev = None
     while prev != text:
         prev = text
@@ -385,7 +385,7 @@ os.makedirs(AUDIO_DIR, exist_ok=True)
 FFMPEG_EXE = r"C:\Users\PONG\AppData\Local\hermes\tools\ffmpeg-9.0.1-win32-x64\bin\ffmpeg.EXE"
 
 VOICE_CONFIG = {
-    "MOM": {"voice": "th-TH-PremwadeeNeural", "rate": "-15%", "pitch_factor": 0.86},
+    "MOM": {"voice": "th-TH-PremwadeeNeural", "rate": "-8%", "pitch_factor": 1.0},
     "BOSS": {"voice": "th-TH-NiwatNeural", "rate": "-4%", "pitch_factor": 0.95},
     "SAGE": {"voice": "th-TH-NiwatNeural", "rate": "+0%", "pitch_factor": 1.0},
     "JOY": {"voice": "th-TH-PremwadeeNeural", "rate": "-5%", "pitch_factor": 0.94},
@@ -423,7 +423,10 @@ def make_audio(bot_id, text):
                     pass
                 # Attempt 3: Niwat fallback
                 try:
-                    comm = edge_tts.Communicate(safe_text, "th-TH-NiwatNeural")
+                    if bot_id in ["MOM", "JOY"]:
+                        comm = edge_tts.Communicate(safe_text, "th-TH-PremwadeeNeural")
+                    else:
+                        comm = edge_tts.Communicate(safe_text, "th-TH-NiwatNeural")
                     await comm.save(tmp_path)
                     return
                 except Exception as ex:

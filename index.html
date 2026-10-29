@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>ร้าน Sujiraporn Cafe’ — อั่ งม้อ · ตู่ · หม่อตี๋</title>
+<title>ร้าน Sujiraporn Cafe’ — อั่ งม้อ · ตู่ · ม่อตี๋</title>
 <script src="p5.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght:400,600,700&display=swap" rel="stylesheet">
 <style>
@@ -125,7 +125,7 @@ const BOTS = [
   { id: "BOSS",  name: "ไถ่",     role: "👑 พี่ใหญ่ · ตั่วเฮีย", col: [210, 190, 140], home: -Math.PI / 2 },
   { id: "JOY",   name: "ตู่",     role: "🌸 อาเจ้ · แม่บ้านใหญ่", col: [255, 105, 180], home: 0 },
   { id: "SAGE",  name: "อั่งม้อ",  role: "⚡ หยี่เฮีย · นักลงทุน", col: [255, 215, 45],  home: Math.PI / 2 },
-  { id: "CHILL", name: "หม่อตี๋",  role: "🔷 น้องเล็ก",   col: [80, 210, 255],  home: Math.PI },
+  { id: "CHILL", name: "ม่อตี๋",  role: "🔷 น้องเล็ก",   col: [80, 210, 255],  home: Math.PI },
 ];
 
 const GUESTS = [
@@ -890,7 +890,7 @@ function drawHumanPerson(b, speaking, t, walking, x, z, face, sitDrop, ph) {
   // BOSS ไถ่  ~62 ปี : ตั่วเฮีย ผมเทาเงินบางด้านบน พุงนิดๆ เสื้อโปโลกรมท่า แว่นสายตายาว
   // SAGE อั่งม้อ ~45 ปี : หยี่เฮีย ผมดำแซมเทาข้างขมิง หนวดบางๆ เสื้อโปโลแดงเลือดนก กางเกงสแล็ค
   // JOY ตู่   ~50 ปี : อาเจ้ ผมบ๊อบดำประบ่าแซมเทา ต่างหูทอง เสื้อบลาวซ์สีเขียวอมฟ้า กระโปรงยาว
-  // CHILL หม่อตี๋ ~28 ปี : น้องเล็ก ผมดำหนามีหน้าม้า เสื้อยืดฟ้าอ่อน ยีนส์ สะเก็ดอ่อนวัย
+  // CHILL ม่อตี๋ ~28 ปี : น้องเล็ก ผมดำหนามีหน้าม้า เสื้อยืดฟ้าอ่อน ยีนส์ สะเก็ดอ่อนวัย
   const P = {};
   if (b.id === "BOSS") {
     P.skin = [233, 194, 158]; P.hair = [196, 196, 202]; P.hairDark = [150, 150, 158];
@@ -1088,7 +1088,7 @@ function drawHumanPerson(b, speaking, t, walking, x, z, face, sitDrop, ph) {
     fill(hd[0] + 30, hd[1] + 30, hd[2] + 32);
     for (const s of [-1, 1]) { push(); translate(s * 10.2, 5.5, 6.5); scale(0.25, 0.8, 0.35); sphere(4); pop(); }
   } else if (P.style === "young") {
-    // หม่อตี๋: ผมดำหนามีหน้าม้า
+    // ม่อตี๋: ผมดำหนามีหน้าม้า
     fill(hc[0], hc[1], hc[2]);
     push(); translate(0, -4, -1.5); scale(0.97, 1.02, 0.99); sphere(14.4); pop();
     push(); translate(0, -10, 5); scale(1.0, 0.55, 0.75); sphere(10); pop();          // ปอยหน้าม้า
@@ -1283,9 +1283,9 @@ function sanitizeBotNames(text) {
     .replace(/เซจ/g, "อั่งม้อ")
     .replace(/joy/gi, "ตู่")
     .replace(/จอย/g, "ตู่")
-    .replace(/chill/gi, "หม่อตี๋")
-    .replace(/หหม่อตี๋|ม็อบตี๋|มอตี้|มือกตี๋|ม่อตี๋|หมอตี๋/g, "หม่อตี๋")
-    .replace(/^(อาม้า|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|อาเจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หหม่อตี๋|หม่อตี๋|ม่อตี๋):\s*/, "")
+    .replace(/chill/gi, "ม่อตี๋")
+    .replace(/หม่อตี๋|ม็อบตี๋|มอตี้|มือกตี๋|ม่อตี๋|หมอตี๋/g, "ม่อตี๋")
+    .replace(/^(อาม้า|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|อาเจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หม่อตี๋|ม่อตี๋|ม่อตี๋):\s*/, "")
     .replace(/\buf\b/gi, "")
     .replace(/uf/gi, "")
     .replace(/\bbitcoin\b|\bbtc\b/gi, "บิตคอยน์")
