@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>ร้าน Sujiraporn Cafe’ — อั่งม้อ · ตู่ · หม่อตี๋</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.3/p5.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: #0b0705; height: 100%;
+    font-family: "Noto Sans Thai", "Segoe UI", system-ui, sans-serif; }
+  #ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  
+  #title { position: absolute; top: 16px; left: 20px; color: #fdf6ec;
+    font-size: 22px; letter-spacing: 1px; font-weight: 700;
+    text-shadow: 0 2px 12px rgba(255, 180, 70, 0.45); }
+
+  #bubble { position: absolute; max-width: 360px; min-width: 200px;
+    background: rgba(14, 9, 6, 0.94); color: #fff; border-radius: 18px;
+    padding: 14px 18px; font-size: 16px; line-height: 1.6;
+    transform: translate3d(-50%, -100%, 0); border: 2px solid rgba(255,255,255,0.4);
+    box-shadow: 0 12px 38px rgba(0,0,0,0.8), 0 0 25px rgba(0,0,0,0.45);
+    display: none; pointer-events: none; z-index: 50;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: opacity 0.25s ease-out, border-color 0.25s, box-shadow 0.25s;
+    will-change: transform, left, top; }
+  #bubble:after { content: ""; position: absolute; left: 50%; bottom: -9px;
+    width: 16px; height: 16px; background: inherit; border-right: 2px solid inherit;
+    border-bottom: 2px solid inherit; transform: translateX(-50%) rotate(45deg); }
+  .bub-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .bub-tag { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 13px; font-weight: 800; color: #0c0806; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .bub-text { color: #ffffff; font-size: 15.5px; line-height: 1.62; word-break: break-word; font-weight: 500; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+
+
+  #audioBanner {
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(234, 88, 12, 0.96), rgba(217, 119, 6, 0.96));
+    color: #fff; padding: 10px 22px; border-radius: 30px; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; pointer-events: auto; z-index: 100;
+    box-shadow: 0 4px 22px rgba(234, 88, 12, 0.65), 0 0 10px rgba(255, 255, 255, 0.35);
+    display: flex; align-items: center; gap: 8px; animation: bounceBanner 2.2s infinite;
+  }
+  #audioBanner:hover { background: linear-gradient(135deg, rgba(249, 115, 22, 1), rgba(234, 88, 12, 1)); }
+  #audioBanner small { font-size: 11px; opacity: 0.9; margin-left: 4px; font-weight: 400; }
+  @keyframes bounceBanner { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+
+  #bottomBar { position: absolute; bottom: 14px; left: 20px; right: 20px;
+    display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+  #controls { display: flex; align-items: center; gap: 12px; pointer-events: auto; }
+  
+  .btn { color: #ffd98a; font-size: 13px; background: rgba(26, 16, 10, 0.85);
+    border: 1px solid rgba(255, 200, 100, 0.4); border-radius: 18px;
+    padding: 6px 14px; cursor: pointer; backdrop-filter: blur(4px);
+    transition: all 0.2s; font-family: inherit; }
+  .btn:hover { background: rgba(45, 28, 18, 0.95); border-color: rgba(255, 215, 120, 0.8); }
+  #testBtn { color: #9be5ff; border-color: rgba(120, 210, 255, 0.45); }
+  #testBtn:hover { border-color: rgba(150, 230, 255, 0.9); }
+  
+  #hint { color: #8e7c65; font-size: 12px; }
+  #voiceName { color: #a49179; font-size: 11px; margin-left: 6px; }
+
+  #live { display: flex; align-items: center; gap: 6px; color: #ffb85e; font-size: 12px; font-weight: 600; }
+  #live i { width: 9px; height: 9px; border-radius: 50%;
+    background: #4ade80; box-shadow: 0 0 8px #4ade80; animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+</style>
+</head>
+<body>
+<audio id="audioPlayer" playsinline preload="auto"></audio>
+<div id="ui">
+  <div id="title">ร้าน Sujiraporn Cafe’</div>
+
+  <div id="audioBanner" onclick="unlockAudio(event)">
+    <span>🔊</span>
+    <span>คลิกหรือแตะที่นี่ เพื่อเปิดฟังเสียงบอทคุยสด</span>
+    <small id="iosHint" style="display:none;">(iPhone: สลับสวิตช์เปิดเสียงด้านข้าง)</small>
+  </div>
+
+  <div id="bubble"></div>
+
+  <div id="bottomBar">
+    <div id="controls">
+      <button class="btn" id="sndBtn">🔊 เสียง: เปิด</button>
+      <button class="btn" id="testBtn">🎙 ทดสอบเสียงพูด</button>
+      <span id="voiceName">เสียง: กำลังเชื่อมต่อ…</span>
+    </div>
+    <div id="hint">🖱 ลากเมาส์ / สัมผัสเพื่อหมุนมุมกล้อง 360°</div>
+    <div id="live"><i></i>กำลังดำเนินการ (สด)</div>
+  </div>
+</div>
+<script>
+p5.disableFriendlyErrors = true;
+
+// Cast definition (4 พี่น้องแห่ง Sujiraporn Cafe’ + อาม้า เจ้าของร้าน)
+const BOTS = [
+  { id: "MOM",   name: "ม้า",   role: "☕ บาริสต้าผู้ก่อตั้งร้าน", col: [255, 140, 100], home: 0, isMom: true },
+  { id: "BOSS",  name: "ไถ่",     role: "👑 พี่ใหญ่ · ตั่วเฮีย", col: [210, 190, 140], home: -Math.PI / 2 },
+  { id: "JOY",   name: "ตู่",     role: "🌸 อาเจ้ · แม่บ้านใหญ่", col: [255, 105, 180], home: 0 },
+  { id: "SAGE",  name: "อั่งม้อ",  role: "⚡ หยี่เฮีย · นักลงทุน", col: [255, 215, 45],  home: Math.PI / 2 },
+  { id: "CHILL", name: "หม่อตี๋",  role: "🔷 น้องเล็ก",   col: [80, 210, 255],  home: Math.PI },
+];
+
+const GUESTS = [
+  { col: [150, 165, 185], hair: [70, 50, 40] },
+  { col: [180, 140, 95],  hair: [40, 30, 25] },
+  { col: [135, 155, 120], hair: [140, 90, 50] },
+  { col: [160, 125, 165], hair: [60, 40, 30] },
+];
+
+const HOME_R = 175;
+const FLOOR_Y = 150;
+
+// Table layout
+const MAIN = { x: 0, z: 0, r: 85 };
+const SIDES = [
+  { x: -350, z: -200, r: 60 }, { x: 350, z: -200, r: 60 },
+  { x: -320, z: 260, r: 60 },  { x: 320, z: 260, r: 60 },
+];
+
+// Obstacle collision circles for walking bots (tables & counters)
+const OBSTACLES = [
+  { x: MAIN.x, z: MAIN.z, r: MAIN.r + 35 }, // Main table centerpiece + chairs
+  { x: -350, z: -200, r: 90 }, { x: 350, z: -200, r: 90 },
+  { x: -320, z: 260, r: 90 },  { x: 320, z: 260, r: 90 },
+  { x: -260, z: -460, r: 180 }, // Bar counter boundary
+];
+
+// Stroll destination waypoints (open floor areas away from tables)
+const STROLLS = [
+  { x: 0, z: 380 }, { x: -380, z: 40 }, { x: 380, z: 40 },
+  { x: -160, z: -320 }, { x: 160, z: -320 }, { x: 0, z: -320 },
+  { x: 380, z: -280 }, { x: -380, z: -280 },
+  { x: 240, z: 180 },  { x: -240, z: 180 },
+];
+
+let dust = [];
+let steamPuffs = [];
+let camA = 0.65;
+try {
+  const qc = new URLSearchParams(location.search).get("cam");
+  if (qc !== null && isFinite(parseFloat(qc))) camA = parseFloat(qc);
+} catch (e) {}
+
+let seen = 1, queue = [];
+let isFirstPull = true;
+let active = null, bubbleUntil = 0, typed = 0;
+
+const logEl = document.getElementById("log");
+const bubEl = document.getElementById("bubble");
+const sndBtn = document.getElementById("sndBtn");
+const testBtn = document.getElementById("testBtn");
+const voiceNameEl = document.getElementById("voiceName");
+
+function homePos(b) {
+  if (b.isMom) {
+    return { x: -170, z: -395 }; // Standing right at the cafe espresso counter
+  }
+  return { x: Math.sin(b.home) * HOME_R, z: Math.cos(b.home) * HOME_R };
+}
+function faceTo(fx, fz, tx, tz) { return Math.atan2(tx - fx, tz - fz); }
+
+function setup() {
+  const cnv = createCanvas(windowWidth, windowHeight, WEBGL);
+  // Auto-restore WebGL if GPU context was momentarily lost
+  cnv.elt.addEventListener("webglcontextlost", (event) => {
+    event.preventDefault();
+    console.warn("WebGL Context Lost. Auto-restoring...");
+  }, false);
+  cnv.elt.addEventListener("webglcontextrestored", () => {
+    console.log("WebGL Context Restored successfully.");
+  }, false);
+
+  pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
+  colorMode(RGB, 255);
+  textFont("Noto Sans Thai");
+
+  // Floating cafe ambient dust motes
+  for (let i = 0; i < 120; i++) {
+    dust.push({
+      x: random(-650, 650), y: random(-280, 130), z: random(-650, 650),
+      s: random(1.5, 3.5), p: random(Math.PI * 2), v: random(0.2, 0.6),
+    });
+  }
+
+  // Steam puffs from espresso machine
+  for (let i = 0; i < 18; i++) {
+    steamPuffs.push({
+      x: -240 + random(-10, 10), y: -10 + random(-30, 30), z: -430 + random(-8, 8),
+      vy: random(0.6, 1.4), vx: random(-0.2, 0.2), s: random(4, 12),
+      alpha: random(30, 90), p: random(Math.PI * 2)
+    });
+  }
+
+  // Seat guests at side tables
+  const spots = [];
+  for (const t of SIDES) {
+    for (const a of [0.4, 0.4 + Math.PI]) {
+      spots.push({ x: t.x + Math.sin(a) * (t.r + 48), z: t.z + Math.cos(a) * (t.r + 48), t });
+    }
+  }
+  GUESTS.forEach((g, i) => {
+    const s = spots[i % spots.length];
+    g.x = s.x; g.z = s.z; g.face = faceTo(s.x, s.z, s.t.x, s.t.z);
+    g.ph = random(Math.PI * 2);
+  });
+
+  // Initialize main bots
+  for (const b of BOTS) {
+    const h = homePos(b);
+    b.x = h.x; b.z = h.z; b.face = faceTo(h.x, h.z, 0, 0);
+    const p = STROLLS[Math.floor(Math.random() * STROLLS.length)];
+    b.tx = p.x; b.tz = p.z; b.mode = "sit"; b.purpose = "home";
+    b.wait = millis() + random(3, 7) * 1000;
+    b.strolls = 0; b.walkPh = random(10);
+  }
+
+  setInterval(pull, 2500);
+  pull();
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+// Touch controls for mobile drag rotation
+let touchStartX = 0;
+function touchStarted() {
+  if (touches && touches.length > 0) {
+    touchStartX = touches[0].x;
+  }
+}
+function touchMoved() {
+  if (touches && touches.length > 0) {
+    const dx = touches[0].x - touchStartX;
+    camA += dx * 0.005;
+    touchStartX = touches[0].x;
+    return false; // prevent page scroll
+  }
+}
+
+let historyPool = [];
+let poolIdx = 0;
+let nextSpeechTime = 0;
+
+async function pull() {
+  try {
+    const r = await fetch("dialogue.json?_=" + Date.now());
+    if (!r.ok) return;
+    const j = await r.json();
+    const msgs = j.messages || [];
+    
+    // Filter valid chat messages with audio
+    const valid = msgs.filter(m => m.bot !== "SYSTEM" && m.text);
+    if (valid.length > 0) {
+      historyPool = valid;
+    }
+
+    if (isFirstPull) {
+      seen = msgs.length;
+      isFirstPull = false;
+    } else if (msgs.length > seen) {
+      for (let i = seen; i < msgs.length; i++) {
+        const m = msgs[i];
+        if (m.bot !== "SYSTEM") queue.push(m);
+      }
+      seen = msgs.length;
+    }
+  } catch (e) {}
+}
+
+function css(c) { return "rgb(" + Math.round(c[0]) + "," + Math.round(c[1]) + "," + Math.round(c[2]) + ")"; }
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function addLog(m) {
+  if (!logEl) return;
+  const b = BOTS.find(x => x.id === m.bot) || { col: [160, 160, 180], name: m.bot };
+  const d = document.createElement("div");
+  d.className = "msg";
+  d.style.borderLeftColor = css(b.col);
+  const timeStr = m.ts ? m.ts.slice(11, 16) : "";
+  d.innerHTML = "<b style='color:" + css(b.col) + "'>" + escapeHtml(b.name || m.bot) + "</b>" +
+    (timeStr ? "<span class='t'>" + timeStr + "</span>" : "") + "<br>" + escapeHtml(m.text);
+  logEl.prepend(d);
+  while (logEl.children.length > 15) logEl.lastChild.remove();
+}
+
+// Natural smooth obstacle avoidance & steering
+function updateBot(b, now, dt) {
+  if (b.isMom) {
+    // อาม้า ยืนชงกาแฟอยู่ที่หน้าเครื่องชงกาแฟเอสเพรสโซ่
+    b.x = -170;
+    b.z = -395;
+    const targetFace = faceTo(b.x, b.z, 0, 0);
+    let df = targetFace - b.face;
+    while (df > Math.PI) df -= Math.PI * 2;
+    while (df < -Math.PI) df += Math.PI * 2;
+    b.face += df * 0.05;
+    b.mode = "barista";
+    return;
+  }
+  const speed = 72; // pixels per second (gentle natural walking pace)
+  
+  if (b.mode === "sit") {
+    // Look toward the center conversation table
+    const targetFace = faceTo(b.x, b.z, 0, 0);
+    let df = targetFace - b.face;
+    while (df > Math.PI) df -= Math.PI * 2;
+    while (df < -Math.PI) df += Math.PI * 2;
+    b.face += df * 0.04;
+
+    if (now > b.wait) {
+      const p = STROLLS[Math.floor(Math.random() * STROLLS.length)];
+      b.tx = p.x + random(-25, 25);
+      b.tz = p.z + random(-25, 25);
+      b.mode = "go";
+      b.purpose = "stroll";
+    }
+  } else if (b.mode === "go") {
+    let dx = b.tx - b.x;
+    let dz = b.tz - b.z;
+    const dist = Math.hypot(dx, dz);
+
+    if (dist < 18) {
+      if (b.purpose === "home") {
+        b.mode = "sit";
+        b.strolls = 0;
+        b.wait = now + random(10, 22) * 1000;
+      } else {
+        b.mode = "pause";
+        b.wait = now + random(3, 7) * 1000;
+        b.strolls++;
+      }
+      return;
+    }
+
+    let vx = dx / dist;
+    let vz = dz / dist;
+
+    // Smooth obstacle avoidance around tables
+    for (const obs of OBSTACLES) {
+      const to_ox = obs.x - b.x;
+      const to_oz = obs.z - b.z;
+      const dist_to_obs = Math.hypot(to_ox, to_oz);
+
+      // If already encroaching, gently push outward
+      if (dist_to_obs < obs.r) {
+        if (dist_to_obs > 0.01) {
+          b.x = obs.x + (b.x - obs.x) / dist_to_obs * obs.r;
+          b.z = obs.z + (b.z - obs.z) / dist_to_obs * obs.r;
+        }
+        continue;
+      }
+
+      // Check if path penetrates obstacle circle
+      const proj_dist = to_ox * vx + to_oz * vz;
+      if (proj_dist > 0 && proj_dist < dist + 40) {
+        const perp_x = to_ox - proj_dist * vx;
+        const perp_z = to_oz - proj_dist * vz;
+        const perp_dist = Math.hypot(perp_x, perp_z);
+
+        if (perp_dist < obs.r) {
+          // Tangent deflection vector
+          let avoid_x = -perp_x / (perp_dist || 1);
+          let avoid_z = -perp_z / (perp_dist || 1);
+          const strength = (1.0 - perp_dist / obs.r) * 1.8;
+          vx += avoid_x * strength;
+          vz += avoid_z * strength;
+          const vlen = Math.hypot(vx, vz) || 1;
+          vx /= vlen;
+          vz /= vlen;
+        }
+      }
+    }
+
+    // Face the current moving direction smoothly
+    const targetFace = Math.atan2(vx, vz);
+    let df = targetFace - b.face;
+    while (df > Math.PI) df -= Math.PI * 2;
+    while (df < -Math.PI) df += Math.PI * 2;
+    b.face += df * 0.1;
+
+    // Step forward
+    const step = Math.min(dist, speed * dt);
+    b.x += vx * step;
+    b.z += vz * step;
+    b.walkPh += dt * 10;
+
+  } else { // pause & look around
+    b.face += Math.sin(now / 1500 + b.walkPh) * 0.008;
+    if (now > b.wait) {
+      if (b.strolls >= 2) {
+        const h = homePos(b);
+        b.tx = h.x; b.tz = h.z;
+        b.mode = "go"; b.purpose = "home";
+      } else {
+        const p = STROLLS[Math.floor(Math.random() * STROLLS.length)];
+        b.tx = p.x + random(-25, 25);
+        b.tz = p.z + random(-25, 25);
+        b.mode = "go"; b.purpose = "stroll";
+      }
+    }
+  }
+}
+
+function draw() {
+  try {
+    const now = millis(), t = now / 1000, dt = Math.min(deltaTime / 1000, 0.05);
+    background(11, 7, 5);
+
+    if (mouseIsPressed && isFinite(mouseX) && isFinite(pmouseX)) {
+      camA += (mouseX - pmouseX) * 0.006;
+    } else {
+      camA += 0.0012; // slow cinematic drift
+    }
+    if (!isFinite(camA)) camA = 0.65;
+    
+    camera(Math.sin(camA) * 580, -220, Math.cos(camA) * 580, 0, 35, 0, 0, 1, 0);
+    const aspect = (height > 0) ? (width / height) : (16 / 9);
+    perspective(Math.PI / 3, isFinite(aspect) && aspect > 0 ? aspect : 1.77, 10, 5000);
+
+    // Warm cozy lighting
+    ambientLight(80, 72, 80);
+    directionalLight(220, 200, 175, 0.4, 0.8, -0.5);
+    pointLight(255, 195, 130, 0, -240, 0);
+    pointLight(255, 160, 90, -220, 0, -420); // coffee bar glow
+
+    drawCafe();
+    drawCoffeeStation();
+    drawDust();
+    for (const s of SIDES) drawTableSet(s.x, s.z, s.r, true);
+    drawATM();
+    drawTableSet(MAIN.x, MAIN.z, MAIN.r, false);
+
+    // Stools for main cast around central table
+    for (const b of BOTS) {
+      if (!b.isMom) {
+        const h = homePos(b);
+        drawStool(h.x, h.z, faceTo(h.x, h.z, 0, 0));
+      }
+    }
+
+    // Side tables
+    for (const g of GUESTS) {
+      drawStool(g.x, g.z, g.face);
+    }
+
+    // Continuous active dialogue processing
+    if (!active && (queue.length > 0 || historyPool.length > 0)) {
+      if (now > nextSpeechTime) {
+        if (queue.length > 0) {
+          active = queue.shift();
+        } else if (historyPool.length > 0) {
+          // Play newer messages from the end of history pool rather than from the beginning
+          const startIdx = Math.max(0, historyPool.length - 15);
+          active = historyPool[startIdx + (poolIdx % Math.min(15, historyPool.length))];
+          poolIdx++;
+        }
+        typed = 0;
+        bubbleUntil = millis() + Math.max(7500, (active.text ? active.text.length : 0) * 110);
+        nextSpeechTime = bubbleUntil + 2200; // 2.2s natural breathing pause before next reply
+        speak(active.bot, active.text, active.audio);
+      }
+    }
+    if (active && millis() > bubbleUntil) {
+      active = null;
+    }
+
+    // Update and draw characters
+    for (const b of BOTS) {
+      updateBot(b, now, dt);
+      const speaking = active && active.bot === b.id;
+      const walking = b.mode === "go" ? 1 : 0;
+      const sitDrop = b.mode === "sit" ? -12 : 0;
+      if (b.isMom) {
+        drawMomBarista(b, speaking, t, b.x, b.z, b.face);
+      } else {
+        drawHumanPerson(b, speaking, t, walking, b.x, b.z, b.face, sitDrop, b.walkPh);
+      }
+    }
+
+    drawBubble();
+  } catch (renderErr) {
+    console.warn("Recovered render frame error:", renderErr);
+  }
+}
+
+function drawCafe() {
+  // Wood floor with rich warm planks
+  push(); translate(0, FLOOR_Y, 0); rotateX(Math.PI / 2);
+  noStroke(); fill(45, 27, 16); plane(1900, 1900);
+  stroke(30, 17, 10, 180); strokeWeight(2);
+  for (let g = -900; g <= 900; g += 75) line(g, -900, g, 900);
+  pop();
+
+  // Ornate cafe Persian-style rug under main table
+  push(); translate(0, FLOOR_Y - 2, 0);
+  noStroke(); fill(130, 32, 36); cylinder(290, 4, 48, 1);
+  fill(210, 165, 100); cylinder(245, 5, 48, 1);
+  fill(130, 32, 36); cylinder(230, 6, 48, 1);
+  pop();
+
+  // Warm wood walls with gold trim
+  noStroke(); fill(24, 15, 9);
+  push(); translate(0, -180, -560); plane(1900, 700); pop();
+  push(); translate(-760, -180, 0); rotateY(Math.PI / 2); plane(1300, 700); pop();
+  push(); translate(760, -180, 0); rotateY(-Math.PI / 2); plane(1300, 700); pop();
+
+  // Gold trim moldings
+  emissiveMaterial(210, 160, 85);
+  push(); translate(0, -40, -556); box(1900, 4, 4); pop();
+  push(); translate(0, -320, -556); box(1900, 4, 4); pop();
+  emissiveMaterial(0, 0, 0);
+
+  // Bar counter (solid dark mahogany with brass edge)
+  push(); translate(-260, 62, -460);
+  noStroke(); fill(50, 28, 15); box(430, 126, 90);
+  fill(75, 44, 22); translate(0, -68, 0); box(450, 14, 110);
+  emissiveMaterial(180, 130, 60); translate(0, -7, 0); box(452, 2, 112);
+  emissiveMaterial(0, 0, 0);
+  pop();
+
+  // Glass bottles glowing softly on shelf
+  const bottleCols = [[255, 150, 60], [120, 220, 130], [220, 80, 90], [140, 180, 255], [255, 210, 120]];
+  bottleCols.forEach((bc, i) => {
+    push(); translate(-420 + i * 42, -6, -460);
+    noStroke(); fill(40, 24, 14); cylinder(10, 42, 10, 1);
+    emissiveMaterial(bc[0], bc[1], bc[2]);
+    translate(0, -6, 0); cylinder(7, 24, 10, 1);
+    emissiveMaterial(0, 0, 0);
+    pop();
+  });
+
+  // Hanging pendant lamps
+  const lamps = [[0, 0], [-350, -200], [350, -200], [-320, 260], [320, 260], [-240, -440]];
+  for (const [lx, lz] of lamps) {
+    push(); translate(lx, -260, lz);
+    stroke(110, 85, 55); strokeWeight(2.5); line(0, 60, 0, -140);
+    noStroke(); fill(60, 36, 18); translate(0, 75, 0); cone(32, 28, 16, 1);
+    emissiveMaterial(255, 200, 130); translate(0, 14, 0); sphere(9);
+    emissiveMaterial(0, 0, 0);
+    pop();
+  }
+
+  // Cafe windows with soft city evening glow
+  for (const wz of [-160, 160]) {
+    push(); translate(754, -160, wz); rotateY(-Math.PI / 2);
+    emissiveMaterial(75, 115, 175); plane(150, 220);
+    emissiveMaterial(0, 0, 0);
+    noStroke(); fill(20, 26, 40);
+    plane(158, 10);
+    push(); rotateZ(Math.PI / 2); plane(228, 10); pop();
+    pop();
+  }
+}
+
+// REAL CAFE ESPRESSO MACHINE & COFFEE SETUP (จัดเต็ม)
+function drawCoffeeStation() {
+  const t = millis() / 1000;
+  
+  // Commercial 2-Group Espresso Machine on Bar Counter
+  push(); translate(-230, -5, -450);
+  
+  // Main stainless steel / chrome body
+  noStroke(); fill(215, 218, 224); box(84, 62, 54);
+  fill(40, 42, 48); translate(0, 20, 8); box(80, 18, 42); // Lower drip tray
+  
+  // Drip tray chrome grill
+  fill(180, 185, 190);
+  for (let gx = -32; gx <= 32; gx += 8) {
+    push(); translate(gx, -10, 0); box(3, 2, 38); pop();
+  }
+  
+  // Upper cup warming rack stacked with ceramic cups
+  push(); translate(0, -52, -6);
+  fill(190, 195, 200); box(78, 3, 44); // warmer tray
+  // Stack of small espresso cups
+  const cupColors = [[240, 235, 225], [235, 120, 100], [100, 180, 220], [245, 210, 110]];
+  for (let ci = 0; ci < 6; ci++) {
+    const cx = -26 + (ci % 3) * 26;
+    const cz = ci < 3 ? -10 : 10;
+    const cc = cupColors[ci % cupColors.length];
+    push(); translate(cx, -8, cz);
+    fill(cc[0], cc[1], cc[2]); cylinder(8, 12, 12, 1);
+    pop();
+  }
+  pop();
+
+  // Dual Group Heads with Portafilters
+  for (const ghx of [-20, 20]) {
+    push(); translate(ghx, -5, 28);
+    fill(170, 175, 180); cylinder(11, 10, 14, 1); // group collar
+    fill(30, 32, 35); translate(0, 8, 8);
+    rotateX(0.2);
+    box(8, 8, 28); // portafilter handle
+    // Espresso shot glass below group
+    fill(245, 245, 250, 180); translate(0, 14, -8); cylinder(6, 12, 10, 1);
+    emissiveMaterial(110, 60, 25); translate(0, -3, 0); cylinder(5, 4, 10, 1); // espresso crema
+    emissiveMaterial(0, 0, 0);
+    pop();
+  }
+
+  // Steam wand & stainless milk frothing pitcher
+  push(); translate(36, 0, 24);
+  stroke(200, 205, 210); strokeWeight(3);
+  line(0, -10, 0, 8, 12, 8);
+  noStroke(); fill(200, 205, 212);
+  translate(8, 15, 8); cylinder(9, 18, 12, 1); // pitcher
+  pop();
+
+  // Dual pressure gauges on front panel (gold/brass rims)
+  for (const px of [-16, 16]) {
+    push(); translate(px, -20, 28);
+    emissiveMaterial(210, 175, 80); cylinder(6, 3, 14, 1);
+    emissiveMaterial(255, 255, 255); translate(0, 0, 1.5); cylinder(4.5, 1, 12, 1);
+    emissiveMaterial(0, 0, 0);
+    pop();
+  }
+  pop();
+
+  // Commercial Coffee Bean Grinder next to espresso machine
+  push(); translate(-305, 5, -450);
+  noStroke(); fill(45, 48, 55); cylinder(16, 75, 16, 1); // grinder body
+  // Transparent bean hopper on top filled with dark roast beans
+  push(); translate(0, -48, 0);
+  fill(220, 230, 240, 140); cone(20, 24, 16, 1);
+  fill(65, 38, 22); sphere(12); // dark coffee beans inside
+  fill(35, 36, 40); translate(0, -14, 0); cylinder(21, 4, 16, 1); // lid
+  pop();
+  // Grounds dispenser snout
+  fill(30, 32, 36); translate(8, -8, 14); box(8, 14, 12);
+  pop();
+
+  // Animated rising steam puffs
+  noStroke();
+  for (const s of steamPuffs) {
+    s.y -= s.vy;
+    s.x += s.vx;
+    if (s.y < -90) {
+      s.y = -10 + random(-10, 5);
+      s.x = -200 + random(-30, 30);
+    }
+    fill(245, 245, 250, s.alpha * Math.sin(t * 2 + s.p));
+    push(); translate(s.x, s.y, s.z); sphere(s.s); pop();
+  }
+
+  // Coffee mugs on the back shelf with coffee aroma
+  push(); translate(280, -120, -540);
+  noStroke(); fill(52, 30, 16); box(420, 12, 60);
+  for (let i = 0; i < 7; i++) {
+    push(); translate(-160 + i * 54, -18, 0);
+    fill(242, 236, 228); cylinder(11, 20, 14, 1);
+    emissiveMaterial(115, 65, 28); translate(0, -8, 0); cylinder(9.5, 2, 14, 1); // coffee
+    emissiveMaterial(0, 0, 0);
+    pop();
+  }
+  pop();
+}
+
+function drawDust() {
+  const t = millis() / 1000;
+  noStroke();
+  for (const d of dust) {
+    const y = d.y + Math.sin(t * d.v + d.p) * 22;
+    fill(235, 205, 155, 95);
+    push(); translate(d.x, y, d.z); sphere(d.s); pop();
+  }
+}
+
+function drawTableSet(x, z, r, small) {
+  const topY = 66;
+  // Table base pedestal
+  push(); translate(x, FLOOR_Y, z);
+  noStroke(); fill(30, 18, 10); cylinder(r * 0.32, 6, 20, 1);
+  translate(0, -(FLOOR_Y - topY) / 2 - 3, 0);
+  fill(48, 28, 15); cylinder(11, FLOOR_Y - topY, 14, 1);
+  pop();
+
+  // Wooden table top with brass inlay ring
+  push(); translate(x, topY, z);
+  noStroke();
+  if (small) fill(76, 46, 25); else fill(92, 58, 32);
+  cylinder(r, 10, 36, 1);
+  emissiveMaterial(210, 160, 85);
+  translate(0, -6, 0); cylinder(r, 2.5, 36, 1);
+  emissiveMaterial(0, 0, 0);
+  pop();
+
+  // Ceramic cafe coffee cups on table
+  cup(x + r * 0.58, topY - 5, z + r * 0.3, [240, 235, 225]);
+  cup(x - r * 0.58, topY - 5, z - r * 0.3, [235, 130, 110]);
+  if (!small) {
+    cup(x + 10, topY - 5, z - r * 0.52, [110, 190, 230]);
+    cup(x - r * 0.45, topY - 5, z + r * 0.45, [245, 215, 120]);
+  }
+}
+
+function cup(x, y, z, col) {
+  push(); translate(x, y - 6, z);
+  noStroke();
+  fill(col[0], col[1], col[2]); cylinder(8.5, 13, 14, 1); // ceramic cup
+  // Latte art foam inside
+  emissiveMaterial(125, 72, 32); translate(0, -5.5, 0); cylinder(7, 2, 12, 1);
+  fill(250, 245, 238); translate(0, -1, 0); sphere(3.5); // foam heart
+  emissiveMaterial(0, 0, 0);
+  pop();
+}
+
+// ------------------------------------------------------------------
+// อาม้า: คุณแม่บาริสต้าผู้ก่อตั้งร้าน ยืนชงกาแฟอยู่ที่เคาน์เตอร์
+// ------------------------------------------------------------------
+function drawMomBarista(b, speaking, t, x, z, face) {
+  const y = FLOOR_Y - 78;
+  const brewMotion = Math.sin(t * 3) * 3;
+  const skin = [255, 222, 195];
+
+  push();
+  translate(x, y, z);
+  rotateY(face);
+  scale(1.1);
+  noStroke();
+
+  // 1. ลำตัวและชุดคอกระเช้า/เสื้อลูกไม้จีนโบราณสีแดงมงคล + ผ้ากันเปื้อนบาริสต้าสีน้ำตาลกาแฟ
+  fill(160, 32, 45); // Traditional lucky crimson blouse
+  push(); translate(0, -6, 0); box(32, 42, 20); pop();
+
+  // Coffee apron over blouse
+  fill(65, 38, 22);
+  push(); translate(0, -4, 1.2); box(24, 38, 20); pop();
+  // Apron straps over shoulders
+  for (const sx of [-9, 9]) {
+    push(); translate(sx, -18, 0); box(3.5, 14, 21); pop();
+  }
+
+  // 2. คอและศีรษะอาม้า
+  fill(skin[0], skin[1], skin[2]);
+  push(); translate(0, -30, 0); cylinder(6, 12, 12, 1); pop();
+
+  // ใบหน้าคุณแม่ใจดี มีรอยยิ้มอบอุ่น
+  push();
+  translate(0, -46, 2);
+  const headNod = speaking ? Math.sin(t * 12) * 1.5 : Math.sin(t * 2) * 0.8;
+  translate(0, headNod * 0.3, 0);
+
+  fill(skin[0], skin[1], skin[2]);
+  push(); scale(0.9, 1.05, 0.92); sphere(16); pop();
+
+  // แว่นสายตาทองคุณแม่ (Reading glasses)
+  stroke(225, 190, 80);
+  strokeWeight(1.8);
+  noFill();
+  push(); translate(-6, -2, 15); circle(0, 0, 7); pop();
+  push(); translate(6, -2, 15); circle(0, 0, 7); pop();
+  line(-2.5, -2, 15, 2.5, -2, 15); // bridge
+  noStroke();
+
+  // ดวงตาอบอุ่น
+  fill(40, 25, 20);
+  push(); translate(-6, -2, 14.8); sphere(1.8); pop();
+  push(); translate(6, -2, 14.8); sphere(1.8); pop();
+
+  // จมูก
+  fill(skin[0] * 0.94, skin[1] * 0.9, skin[2] * 0.9);
+  push(); translate(0, 2, 15); sphere(2.2); pop();
+
+  // รอยยิ้มอบอุ่นของอาม้า
+  push(); translate(0, 7, 14.2);
+  if (speaking) {
+    fill(140, 45, 50);
+    box(6, 3 + Math.abs(Math.sin(t * 14)) * 3, 2);
+  } else {
+    fill(160, 60, 65);
+    box(5.5, 1.8, 1.5);
+  }
+  pop();
+
+  // ทรงผมเกล้ามวยสุภาพ สไตล์อาม้าใจดี (ผมสีเทาแซมดำธรรมชาติ)
+  fill(95, 90, 88);
+  push(); translate(0, -8, -3); sphere(17); pop(); // base hair
+  push(); translate(0, -14, -14); sphere(10); pop(); // hair bun มวยผมด้านหลัง
+  // ปิ่นปักผมทองเหลือง
+  stroke(220, 180, 70); strokeWeight(2.5);
+  line(-14, -14, -14, 14, -14, -14);
+  noStroke();
+
+  pop(); // end head
+
+  // 3. แขนยืนชงกาแฟ (จับก้านดริป / เหยือกกาแฟ)
+  for (const s of [-1, 1]) {
+    push();
+    translate(s * 18, -16, 0);
+    rotateX(0.75 + (s < 0 ? brewMotion * 0.05 : 0));
+    rotateZ(s * 0.25);
+    fill(160, 32, 45); sphere(5.5); // shoulder
+    translate(0, 12, 0);
+    fill(skin[0], skin[1], skin[2]); cylinder(4.8, 16, 12, 1); // arm
+    translate(0, 12, 6);
+    rotateX(-0.5);
+    cylinder(4.5, 16, 12, 1);
+    translate(0, 10, 0);
+    fill(skin[0], skin[1], skin[2]); sphere(4.5); // hand
+
+    // กาดริปกาแฟในมืออาม้า
+    if (s > 0) {
+      fill(210, 215, 220);
+      translate(0, 4, 6);
+      cylinder(6, 14, 12, 1); // pitcher in hand
+    }
+    pop();
+  }
+
+  // 4. กระโปรงยาว/กางเกงผ้าสบายสีดำ
+  fill(30, 25, 28);
+  push(); translate(0, 24, 0); cylinder(14, 38, 14, 1); pop();
+  // รองเท้าคัตชูนุ่มสบาย
+  for (const s of [-1, 1]) {
+    push(); translate(s * 9, 44, 2); fill(25, 20, 22); box(8, 6, 16); pop();
+  }
+
+  pop(); // end mom
+
+  // ฟองคำพูดอาม้า
+  b._wx = x;
+  b._wz = z;
+  b._wy = y - 46 - 45;
+}
+
+function drawStool(x, z, face) {
+  push(); translate(x, FLOOR_Y, z); rotateY(face);
+  noStroke(); fill(40, 24, 13); cylinder(6, 40, 10, 1);
+  translate(0, -24, 0); cylinder(28, 5, 16, 1);
+  fill(130, 42, 38); translate(0, -8, 0); cylinder(22, 12, 16, 1); // cushion
+  translate(0, -26, 20); box(40, 38, 7); // backrest
+  pop();
+}
+
+// ------------------------------------------------------------------
+// HUMAN CHARACTERS: 4 พี่น้อง + รูปร่างหน้าตาใกล้เคียงคนจริง ตามอายุบริบท
+// ------------------------------------------------------------------
+function drawHumanPerson(b, speaking, t, walking, x, z, face, sitDrop, ph) {
+  // ยืนติดพื้นจริง ไม่มีพลังลอย (หายใจนิ่งๆ แทน)
+  const breathe = Math.sin(t * 2.1 + ph) * 0.6;
+  const y = FLOOR_Y - 82 + sitDrop + breathe * 0.2;
+
+  // ---- โปรไฟล์รูปลักษณ์ตามอายุ/บริบทของแต่ละตัวละคร ----
+  // BOSS ไถ่  ~62 ปี : ตั่วเฮีย ผมเทาเงินบางด้านบน พุงนิดๆ เสื้อโปโลกรมท่า แว่นสายตายาว
+  // SAGE อั่งม้อ ~45 ปี : หยี่เฮีย ผมดำแซมเทาข้างขมิง หนวดบางๆ เสื้อโปโลแดงเลือดนก กางเกงสแล็ค
+  // JOY ตู่   ~50 ปี : อาเจ้ ผมบ๊อบดำประบ่าแซมเทา ต่างหูทอง เสื้อบลาวซ์สีเขียวอมฟ้า กระโปรงยาว
+  // CHILL หม่อตี๋ ~28 ปี : น้องเล็ก ผมดำหนามีหน้าม้า เสื้อยืดฟ้าอ่อน ยีนส์ สะเก็ดอ่อนวัย
+  const P = {};
+  if (b.id === "BOSS") {
+    P.skin = [233, 194, 158]; P.hair = [196, 196, 202]; P.hairDark = [150, 150, 158];
+    P.brow = [165, 165, 172]; P.iris = [78, 52, 34];
+    P.shirt = [38, 48, 72];  P.pants = [30, 32, 38];  P.shoe = [42, 28, 18];
+    P.shoulder = 17.5; P.chest = 1.16; P.hip = 1.10; P.belly = 2.6;  // ไหล่กว้างแต่มีพุง
+    P.height = 1.02;   P.thin = 0;     P.grayStreak = 0.55;  P.thick = 0;
+    P.style = "uncle";  P.glasses = true; P.mustache = false; P.longHair = false;
+  } else if (b.id === "SAGE") {
+    P.skin = [236, 197, 160]; P.hair = [38, 30, 26]; P.hairDark = [24, 18, 15];
+    P.brow = [40, 32, 27];   P.iris = [62, 40, 26];
+    P.shirt = [140, 38, 44]; P.pants = [44, 42, 46]; P.shoe = [52, 34, 20];
+    P.shoulder = 17.0; P.chest = 1.05; P.hip = 1.02; P.belly = 1.6;
+    P.height = 1.00;   P.thin = 0;     P.grayStreak = 0.22;  P.thick = 0.2;
+    P.style = "auntyMan"; P.glasses = false; P.mustache = true; P.longHair = false;
+  } else if (b.id === "JOY") {
+    P.skin = [240, 205, 172]; P.hair = [30, 24, 22]; P.hairDark = [20, 16, 14];
+    P.brow = [58, 42, 34];    P.iris = [66, 44, 30];
+    P.shirt = [56, 148, 142]; P.pants = [88, 58, 42]; P.shoe = [30, 24, 24];
+    P.shoulder = 14.2; P.chest = 0.94; P.hip = 1.18; P.belly = 0.8;  // ไหล่แคบ สะโพกผาย
+    P.height = 0.96;   P.thin = 0;     P.grayStreak = 0.35;  P.thick = 0;
+    P.style = "aunty";  P.glasses = false; P.mustache = false; P.longHair = true;
+  } else {
+    P.skin = [238, 200, 165]; P.hair = [28, 22, 20]; P.hairDark = [16, 12, 11];
+    P.brow = [32, 25, 22];    P.iris = [58, 38, 26];
+    P.shirt = [126, 186, 230]; P.pants = [46, 62, 92]; P.shoe = [238, 238, 240];
+    P.shoulder = 15.5; P.chest = 0.96; P.hip = 0.98; P.belly = 0;
+    P.height = 0.99;   P.thin = 0.06;  P.grayStreak = 0;     P.thick = 0;
+    P.style = "young";  P.glasses = false; P.mustache = false; P.longHair = false;
+  }
+  const skin = P.skin;
+
+  push(); translate(x, y, z);
+  rotateY(face);
+  scale(P.height);
+  noStroke();
+
+  // ---- 1. ลำตัวเสื้อ (ทรงคนจริง: มีอก-เอว-สะโพก ไม่ใช่กล่องตรงๆ) ----
+  const chestW = 30 * P.chest * (1 - P.thin);
+  // ต้นคอ/บ่า
+  fill(P.shirt[0], P.shirt[1], P.shirt[2]);
+  push(); translate(0, -18, 0); box(chestW * 2 + 4, 10, 19); pop();       // บ่า
+  push(); translate(0, -6, 0); box(chestW * 2, 26, 19); pop();            // อก
+  push(); translate(0, 14, 0); scale(1, 1, 1); box(chestW * 1.72, 14, 17); pop(); // เอว
+  push(); translate(0, 24, 0); box(chestW * 1.9 * P.hip, 12, 18); pop();  // สะโพก
+  // คอเสื้อ (เนคoline)
+  fill(skin[0], skin[1], skin[2]);
+  push(); translate(0, -16, 8.6); scale(1, 0.55, 0.5); sphere(5.6); pop();
+  // พุง (ผู้สูงอายุ/ชายวัยทำงาน)
+  if (P.belly > 0) {
+    fill(P.shirt[0] * 0.94, P.shirt[1] * 0.94, P.shirt[2] * 0.94);
+    push(); translate(0, 10, 9); scale(1.15, 0.85, 0.9); sphere(P.belly * 3.6); pop();
+  }
+  // กระดุมเสื้อโปโล
+  fill(20, 20, 24);
+  for (let cy = -12; cy <= 8; cy += 7) { push(); translate(0, cy, 9.7); cylinder(1, 1, 8, 1); pop(); }
+
+  // ---- 2. แขนธรรมชาติ (ท่าเดินแกว่ง/ท่าถือแก้ว) ----
+  const sitting = sitDrop < -2 ? 1 : 0;
+  for (const s of [-1, 1]) {
+    const swing = walking ? (s < 0 ? 1 : -1) * Math.sin(ph) * 0.55 : (speaking ? Math.sin(t * 3.2 + s) * 0.22 : 0);
+    push(); translate(s * (chestW + 2.5), -16, 0);
+    rotateX(swing);
+    // แขนเสื้อ
+    fill(P.shirt[0], P.shirt[1], P.shirt[2]);
+    push(); scale(1, 1.5, 1); sphere(5.6); pop();
+    translate(0, 9, 0); cylinder(4.9, 14, 12, 1);
+    // ท่อนแขนล่างผิวคน
+    fill(skin[0], skin[1], skin[2]);
+    translate(0, 3, 0); rotateX(0.28 + (speaking && s > 0 ? -0.5 : 0));
+    translate(0, 6, 0); cylinder(3.9, 15, 12, 1);
+    // มือ
+    translate(0, 9, 1); scale(0.9, 1.15, 0.75); sphere(4.0);
+    pop();
+  }
+
+  // ---- 3. ขา + รองเท้า ----
+  for (const s of [-1, 1]) {
+    const legSwing = sitting ? 1.48 : (walking ? (s < 0 ? 1 : -1) * Math.sin(ph) * 0.5 : 0);
+    push(); translate(s * 7.5, 28, 0);
+    rotateX(legSwing);
+    fill(P.pants[0], P.pants[1], P.pants[2]);
+    translate(0, 12, 0); cylinder(5.4, 24, 12, 1);          // ต้นขา
+    translate(0, 13, 0); sphere(4.8);                        // เข่า
+    if (sitting) rotateX(-1.42);
+    translate(0, 13, 0); cylinder(4.4, 24, 12, 1);           // น่อง
+    translate(0, 14, 3.5);                                    // รองเท้าคนปกติ
+    fill(P.shoe[0], P.shoe[1], P.shoe[2]);
+    scale(0.95, 0.6, 1.5); box(7.5, 6.5, 12);
+    pop();
+  }
+
+  // ---- 4. คอ + ศีรษะโครงสร้างใบหน้าคนจริง ----
+  fill(skin[0] * 0.97, skin[1] * 0.95, skin[2] * 0.95);
+  push(); translate(0, -22, 0); cylinder(4.6, 10, 12, 1); pop();
+
+  push(); translate(0, -34, 1);
+  const headNod = walking ? Math.sin(ph * 2) * 1.2 : (speaking ? Math.sin(t * 9) * 1.2 : Math.sin(t * 1.6) * 0.4);
+  translate(0, headNod * 0.25, 0);
+
+  // กะโหลก+ขากรรไกร (หน้าeggshape ไม่ใช่หัวกลมโต)
+  fill(skin[0], skin[1], skin[2]);
+  push(); scale(0.85, 1.02, 0.88); sphere(13.5); pop();
+  push(); translate(0, 6.5, 3); scale(0.78, 0.68, 0.8); sphere(8.6); pop();
+  // โหนกแก้ม
+  for (const s of [-1, 1]) {
+    push(); translate(s * 7.5, 1.5, 7.5); scale(0.9, 0.9, 0.6); sphere(3.4); pop();
+  }
+
+  // หู
+  for (const s of [-1, 1]) {
+    push(); translate(s * 11.6, 0.5, 0); scale(0.45, 1.0, 0.75); sphere(3.2); pop();
+    if (P.style === "aunty") {  // ต่างหูทองอาเจ้
+      push(); translate(s * 11.8, 3.6, 0.5); fill(230, 185, 80); sphere(1.1); pop();
+    }
+  }
+
+  // จมูกคนจริง (สัน+ปลายมน)
+  fill(skin[0] * 0.93, skin[1] * 0.9, skin[2] * 0.9);
+  push(); translate(0, 1.5, 11.2); scale(0.55, 1.35, 0.8); sphere(3.1); pop();
+  push(); translate(0, 4.2, 11.6); sphere(2.0); pop();
+  for (const s of [-1, 1]) { push(); translate(s * 1.4, 4.8, 10.8); fill(skin[0] * 0.8, skin[1] * 0.75, skin[2] * 0.72); sphere(0.7); pop(); }
+
+  // ---- ดวงตาขนาดจริง (ไม่ใช่ตามanga) ----
+  const eyeY = -1.5, eyeZ = 10.3;
+  for (const ex of [-4.6, 4.6]) {
+    // ตาขาว
+    push(); translate(ex, eyeY, eyeZ); fill(246, 244, 240); scale(1.15, 0.62, 0.5); sphere(2.6); pop();
+    // ตาดำ
+    push(); translate(ex, eyeY, eyeZ + 1.1);
+    fill(P.iris[0], P.iris[1], P.iris[2]); scale(0.9, 0.9, 0.5); sphere(1.35);
+    fill(18, 12, 10); translate(0, 0, 0.5); sphere(0.7);
+    fill(255, 255, 255, 220); translate(0.35, -0.35, 0.2); sphere(0.3);
+    pop();
+    // หนังตาบน + ขนตา
+    fill(skin[0] * 0.88, skin[1] * 0.85, skin[2] * 0.85);
+    push(); translate(ex, eyeY - 1.7, eyeZ + 0.4); box(5.2, 1.1, 1.4); pop();
+    // คิ้วธรรมชาติ (บางตามอายุ)
+    fill(P.brow[0], P.brow[1], P.brow[2]);
+    push(); translate(ex, eyeY - 4.0, eyeZ + 0.6); rotateZ(ex < 0 ? 0.1 : -0.1); box(5.4, 1.1 + P.thick * 3, 1.2); pop();
+  }
+  // หางตา/รอยยิ้มร่องแก้ม (คนอายุ)
+  if (P.grayStreak > 0.3 || P.mustache) {
+    fill(skin[0] * 0.82, skin[1] * 0.78, skin[2] * 0.76);
+    for (const s of [-1, 1]) { push(); translate(s * 6.2, 3.6, 9.6); box(1.0, 3.4, 1.0); pop(); }
+  }
+
+  // หนวดบางๆ หยี่เฮีย
+  if (P.mustache) {
+    fill(P.hair[0] + 14, P.hair[1] + 10, P.hair[2] + 8);
+    push(); translate(0, 6.4, 11.2); scale(1.6, 0.42, 0.6); sphere(2.6); pop();
+  }
+
+  // ปากขนาดจริง ยิ้มธรรมชาติ
+  push(); translate(0, 8.6, 10.6);
+  if (speaking) {
+    const mo = 1.6 + Math.abs(Math.sin(t * 9)) * 2.2;
+    fill(150, 70, 62); scale(1, mo * 0.45, 0.5); sphere(2.8);
+    fill(246, 244, 240); push(); translate(0, -0.7, 0.6); box(3.4, 0.7, 0.6); pop();
+  } else {
+    fill(158, 82, 74); box(4.6, 1.15, 1.1);
+    if (P.style === "aunty" || P.style === "young") { push(); translate(0, -0.4, 0.3); rotateZ(0.18); box(1.6, 0.7, 0.7); pop(); push(); translate(0, -0.4, 0.3); rotateZ(-0.18); box(1.6, 0.7, 0.7); pop(); }
+  }
+  pop();
+
+  // แว่นสายตายาวตั่วเฮีย
+  if (P.glasses) {
+    stroke(210, 175, 75); strokeWeight(1.1); noFill();
+    push(); translate(-4.6, eyeY, eyeZ + 1.4); scale(1, 0.8, 1); circle(0, 0, 6.4); pop();
+    push(); translate(4.6, eyeY, eyeZ + 1.4); scale(1, 0.8, 1); circle(0, 0, 6.4); pop();
+    line(-1.6, eyeY, eyeZ + 1.6, 1.6, eyeY, eyeZ + 1.6);
+    noStroke();
+  }
+
+  // ---- 5. ผมธรรมชาติตามทรง/อายุ (ไม่มีเงาหนาม) ----
+  noStroke();
+  const hc = P.hair, hd = P.hairDark;
+  if (P.longHair) {
+    // อาเจ้: บ๊อบดำประบ่า
+    fill(hc[0], hc[1], hc[2]);
+    push(); translate(0, -3.5, -1.5); scale(0.95, 1.05, 1.0); sphere(14.2); pop();
+    push(); translate(0, 6, -3); scale(0.98, 1.5, 0.8); sphere(10); pop();          // ผมยาวลงข้างหลัง
+    for (const s of [-1, 1]) { push(); translate(s * 10.5, 4, 2); scale(0.42, 1.5, 0.75); sphere(7.2); pop(); } // ปอยผมปิดแก้ม
+    // รอยแสก + เงาเทาตามอายุ
+    fill(hd[0] + 26, hd[1] + 22, hd[2] + 20);
+    push(); translate(1.5, -15, 4); box(1.2, 3, 14); pop();
+  } else if (P.style === "uncle") {
+    // ตั่วเฮีย: ผมเทาเงินหวีเรียบ บางด้านบน
+    fill(hc[0], hc[1], hc[2]);
+    push(); translate(0, -5.5, -2); scale(0.94, 0.85, 0.95); sphere(13.8); pop();
+    for (const s of [-1, 1]) { push(); translate(s * 11, 0, -1); scale(0.32, 0.9, 0.8); sphere(6.5); pop(); }  // ผมข้างหัว
+    fill(skin[0] * 0.98, skin[1] * 0.96, skin[2] * 0.95);   // ศีรษะโพลนด้านบน
+    push(); translate(0, -12.5, 2.5); scale(0.72, 0.32, 0.72); sphere(11); pop();
+    //ไรเถาเทียมสีเทา
+    fill(hd[0] + 30, hd[1] + 30, hd[2] + 32);
+    for (const s of [-1, 1]) { push(); translate(s * 10.2, 5.5, 6.5); scale(0.25, 0.8, 0.35); sphere(4); pop(); }
+  } else if (P.style === "young") {
+    // หม่อตี๋: ผมดำหนามีหน้าม้า
+    fill(hc[0], hc[1], hc[2]);
+    push(); translate(0, -4, -1.5); scale(0.97, 1.02, 0.99); sphere(14.4); pop();
+    push(); translate(0, -10, 5); scale(1.0, 0.55, 0.75); sphere(10); pop();          // ปอยหน้าม้า
+    for (const s of [-1, 1]) { push(); translate(s * 10.5, -8.5, 4); scale(0.5, 1.1, 0.6); sphere(6.5); pop(); }
+    // เงาผมไฮไลท์
+    fill(hd[0] + 34, hd[1] + 28, hd[2] + 26);
+    push(); translate(0, -14.5, 3); scale(0.85, 0.3, 0.5); sphere(8.5); pop();
+  } else {
+    // หยี่เฮีย: สั้นดำหวีข้าง แซมเทาขมิง + ไรผม
+    fill(hc[0], hc[1], hc[2]);
+    push(); translate(0, -5.5, -1.5); scale(0.93, 0.88, 0.95); sphere(13.8); pop();
+    for (const s of [-1, 1]) { push(); translate(s * 10.8, -1, 0); scale(0.3, 0.75, 0.75); sphere(5.8); pop(); }
+    fill(hc[0] + 55, hc[1] + 52, hc[2] + 52);   // เทาแซมขมิง
+    for (const s of [-1, 1]) { push(); translate(s * 9.5, -6, 4.5); scale(0.22, 0.55, 0.3); sphere(4.6); pop(); }
+  }
+
+  pop(); // end head
+  pop(); // end character
+
+  // ฟองคำพูด (ระดับเหนือศีรษะพอดี)
+  b._wx = x; b._wz = z; b._wy = y - 34 - 42;
+}
+
+function drawGuestHuman(g, t, x, z, face, sitDrop, ph) {
+  const y = FLOOR_Y - 84 + sitDrop;
+  push(); translate(x, y, z); rotateY(face);
+  noStroke();
+
+  // Natural clothing
+  fill(g.col[0], g.col[1], g.col[2]);
+  push(); translate(0, -8, 0); box(34, 44, 22); pop();
+
+  // Human neck & head
+  fill(245, 218, 196);
+  push(); translate(0, -32, 0); cylinder(6, 12, 14, 1); pop();
+  push(); translate(0, -48, 2);
+  sphere(17);
+  // Hair
+  fill(g.hair[0], g.hair[1], g.hair[2]);
+  translate(0, -8, -2); scale(1.05, 1.05, 1.08); sphere(17.5);
+  pop();
+
+  // Seated legs
+  for (const s of [-1, 1]) {
+    push(); translate(s * 10, 18, 0);
+    rotateX(1.48);
+    fill(g.col[0] * 0.6, g.col[1] * 0.6, g.col[2] * 0.6);
+    translate(0, 16, 0); cylinder(5.8, 30, 12, 1);
+    translate(0, 15, 0); rotateX(-1.42);
+    translate(0, 16, 0); cylinder(4.8, 28, 12, 1);
+    translate(0, 16, 4); fill(30, 25, 22); box(9, 7, 16);
+    pop();
+  }
+  pop();
+}
+
+// Bitcoin ATM Centerpiece
+function drawATM() {
+  const t = millis() / 1000;
+  push(); translate(0, 16, 0); rotateY(t * 0.25);
+  noStroke(); fill(55, 60, 72); box(54, 88, 24);
+  // Screen
+  emissiveMaterial(20, 45, 95);
+  push(); translate(0, -16, 13); box(40, 26, 2); pop();
+  // Glowing Bitcoin coin
+  emissiveMaterial(255, 165, 40);
+  push(); translate(0, -16, 15); rotateX(Math.PI / 2); cylinder(8, 3, 14, 1); pop();
+  // Slots
+  emissiveMaterial(255, 90, 190); push(); translate(-7, 8, 13); box(22, 4, 2); pop();
+  emissiveMaterial(80, 255, 150); push(); translate(18, 8, 13); box(6, 6, 2); pop();
+  emissiveMaterial(0, 0, 0);
+  pop();
+}
+
+// 3D to 2D screen coordinate projection
+function proj(x, y, z) {
+  const cx = Math.sin(camA) * 580, cy = -220, cz = Math.cos(camA) * 580;
+  let fx = 0 - cx, fy = 35 - cy, fz = 0 - cz;
+  const fl = Math.hypot(fx, fy, fz) || 1; fx /= fl; fy /= fl; fz /= fl;
+
+  let rx = -fz, ry = 0, rz = fx;
+  const rl = Math.hypot(rx, rz) || 1; rx /= rl; rz /= rl;
+
+  let ux = ry * fz - rz * fy, uy = rz * fx - rx * fz, uz = rx * fy - ry * fx;
+  const ul = Math.hypot(ux, uy, uz) || 1; ux /= ul; uy /= ul; uz /= ul;
+
+  const vx = x - cx, vy = y - cy, vz = z - cz;
+  const px = vx * rx + vz * rz;
+  const py = vx * ux + vy * uy + vz * uz;
+  const pz = vx * fx + vy * fy + vz * fz;
+  if (pz < 1) return null;
+
+  const tanH = Math.tan(Math.PI / 6);
+  const asp = width / height;
+  return [
+    (px / (pz * tanH * asp) * 0.5 + 0.5) * width,
+    (0.5 + py / (pz * tanH) * 0.5) * height
+  ];
+}
+
+// Thai Number words to Arabic numerals converter for speech bubbles
+const dMap = {'ศูนย์': 0, 'หนึ่ง': 1, 'เอ็ด': 1, 'สอง': 2, 'ยี่': 2, 'สาม': 3, 'สี่': 4,
+  'ห้า': 5, 'หก': 6, 'เจ็ด': 7, 'แปด': 8, 'เก้า': 9};
+const multMap = {'สิบ': 10, 'สิม': 10, 'ร้อย': 100, 'พัน': 1000, 'หมื่น': 10000, 'แสน': 100000, 'ล้าน': 1000000};
+const numKeys = ['ศูนย์', 'หนึ่ง', 'เอ็ด', 'สอง', 'ยี่', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า', 'สิบ', 'สิม', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
+const numRegex = new RegExp('(?:' + numKeys.join('|') + ')+', 'g');
+
+function parseThaiChunk(s) {
+  let rem = s;
+  const tokens = [];
+  const allKeys = [...Object.keys(dMap), ...Object.keys(multMap)].sort((a, b) => b.length - a.length);
+  while (rem.length > 0) {
+    let matched = false;
+    for (const k of allKeys) {
+      if (rem.startsWith(k)) {
+        tokens.push(k);
+        rem = rem.slice(k.length);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) return null;
+  }
+  let val = 0, digit = 0;
+  for (const tok of tokens) {
+    if (dMap[tok] !== undefined) {
+      digit = dMap[tok];
+    } else if (multMap[tok] !== undefined) {
+      const m = multMap[tok];
+      if (digit === 0 && (tok === 'สิบ' || tok === 'สิม')) digit = 1;
+      val += (digit > 0 ? digit : 1) * m;
+      digit = 0;
+    }
+  }
+  val += digit;
+  return val;
+}
+
+function convertThaiNumbersToArabic(text) {
+  if (!text) return "";
+  
+  // Protect common words that contain number syllables
+  const protectedWords = [
+    ["หยี่เฮีย", "__YEEHEAR__"],
+    ["หยี่", "__YEE__"],
+    ["ความเสี่ยง", "__RISK__"],
+    ["เสี่ยง", "__RISK2__"],
+    ["เรียบร้อย", "__READY__"],
+    ["พันธบัตร", "__BOND__"],
+    ["พันธมิตร", "__ALLY__"],
+    ["ผูกพัน", "__TIE__"]
+  ];
+  for (const [w, p] of protectedWords) text = text.split(w).join(p);
+
+  // 1. Decimals e.g. สี่จุดสี่สิบแปด
+  const decRegex = new RegExp('((?:' + numKeys.join('|') + ')+)จุด((?:' + numKeys.join('|') + ')+)', 'g');
+  text = text.replace(decRegex, (match, p1, p2) => {
+    const v1 = parseThaiChunk(p1);
+    const v2 = parseThaiChunk(p2);
+    if (v1 !== null && v2 !== null) return ' ' + v1 + '.' + v2 + ' ';
+    return match;
+  });
+
+  // 2. Whole numbers
+  text = text.replace(numRegex, (match) => {
+    const v = parseThaiChunk(match);
+    if (v !== null) {
+      const formatted = v >= 1000 ? v.toLocaleString('en-US') : v.toString();
+      return ' ' + formatted + ' ';
+    }
+    return match;
+  });
+
+  // 3. Thai digits ๐-๙
+  text = text.replace(/[๐-๙]/g, c => "0123456789"["๐๑๒๓๔๕๖๗๘๙".indexOf(c)]);
+
+  // Restore protected words
+  for (const [w, p] of protectedWords) text = text.split(p).join(w);
+
+  return text.replace(/\s{2,}/g, ' ').trim();
+}
+
+function sanitizeBotNames(text) {
+  if (!text) return "";
+  let clean = text
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/www\.\S+/g, "")
+    .replace(/Then FINISH_THIS_TURN.*/gi, "")
+    .replace(/FINISH_THIS_TURN.*/gi, "")
+    .replace(/sage/gi, "อั่งม้อ")
+    .replace(/เซจ/g, "อั่งม้อ")
+    .replace(/joy/gi, "ตู่")
+    .replace(/จอย/g, "ตู่")
+    .replace(/chill/gi, "หม่อตี๋")
+    .replace(/หหม่อตี๋|ม็อบตี๋|มอตี้|มือกตี๋|ม่อตี๋|หมอตี๋/g, "หม่อตี๋")
+    .replace(/^(อาม้า|ไถ่|พี่ไถ่|อาไถ่|ตั่วเฮีย|อาเจ้|พี่ตู่|ตุ๊ดตู่|ตู่|หยี่เฮีย|พี่อั่งม้อ|อั่งม้อ|หหม่อตี๋|หม่อตี๋|ม่อตี๋):\s*/, "")
+    .replace(/\buf\b/gi, "")
+    .replace(/uf/gi, "")
+    .replace(/\bbitcoin\b|\bbtc\b/gi, "บิตคอยน์")
+    .replace(/\bethereum\b|\beth\b/gi, "อีเธอเรียม")
+    .replace(/\bfunding\s*rate\b/gi, "ฟันดิงเรต")
+    .replace(/\bheatmap\b/gi, "ฮีตแมป")
+    .replace(/\bliquidation\b/gi, "การล้างพอร์ต")
+    .replace(/\bcoinbase\b/gi, "คอยน์เบส")
+    .replace(/\bfed\b/gi, "เฟด")
+    .replace(/\bbond\s*yield\b/gi, "ผลตอบแทนพันธบัตร")
+    .replace(/\bfutures\b/gi, "ฟิวเจอร์ส")
+    .replace(/\bperpetual\b/gi, "เพอร์เพทชวล")
+    .replace(/\busd\b|\$/gi, "ดอลลาร์")
+    .replace(/[a-zA-Z]+/g, "")
+    .replace(/[\[\]\(\):/\\_~*`><]+/g, " ")
+    .replace(/^[.\s'",\-]+/, "")
+    .replace(/[๐-๙]/g, c => "0123456789"["๐๑๒๓๔๕๖๗๘๙".indexOf(c)])
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{FE0F}]/gu, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  // Convert all written Thai numbers to Arabic numerals 1, 2, 3...
+  return convertThaiNumbersToArabic(clean);
+}
+
+let bubSmoothX = 0, bubSmoothY = 0;
+let bubInitialized = false;
+
+function drawBubble() {
+  if (!bubEl) return;
+  if (!active) {
+    bubEl.style.display = "none";
+    bubInitialized = false;
+    return;
+  }
+  const b = BOTS.find(x => x.id === active.bot);
+  if (!b || b._wx === undefined) {
+    bubEl.style.display = "none";
+    bubInitialized = false;
+    return;
+  }
+  
+  const sp = proj(b._wx, b._wy, b._wz);
+  if (!sp || sp[0] < -120 || sp[0] > width + 120 || sp[1] < -120 || sp[1] > height + 120) {
+    bubEl.style.display = "none";
+    return;
+  }
+
+  // Smooth exponential interpolation (lerp) for silky bubble tracking
+  if (!bubInitialized) {
+    bubSmoothX = sp[0];
+    bubSmoothY = sp[1];
+    bubInitialized = true;
+  } else {
+    bubSmoothX += (sp[0] - bubSmoothX) * 0.18;
+    bubSmoothY += (sp[1] - bubSmoothY) * 0.18;
+  }
+
+  const cleanText = sanitizeBotNames(active.text);
+  typed = Math.min(cleanText.length, typed + 0.9);
+  bubEl.style.display = "block";
+  bubEl.style.left = bubSmoothX.toFixed(1) + "px";
+  bubEl.style.top = bubSmoothY.toFixed(1) + "px";
+  bubEl.style.borderColor = css(b.col);
+  bubEl.style.boxShadow = "0 12px 38px rgba(0,0,0,0.85), 0 0 20px " + css(b.col).replace("rgb", "rgba").replace(")", ",0.35)");
+  
+  const botDisplayName = b.name || b.id;
+  bubEl.innerHTML = 
+    "<div class='bub-header'>" +
+      "<span class='bub-tag' style='background:" + css(b.col) + "'>" + escapeHtml(botDisplayName) + "</span>" +
+    "</div>" +
+    "<div class='bub-text'>" + escapeHtml(cleanText.slice(0, Math.floor(typed))) + "</div>";
+}
+
+// ------------------------------------------------------------------
+// THAI SPEECH SYNTHESIS ENGINE
+// ------------------------------------------------------------------
+let sndOn = true;
+let thVoice = null;
+
+function pickThaiVoice() {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    const vs = speechSynthesis.getVoices() || [];
+    thVoice = vs.find(v => /^(narisa|kanya)$/i.test((v.name || "").trim()))
+      || vs.find(v => v.lang && v.lang.toLowerCase().indexOf("th") === 0)
+      || vs.find(v => /thai|narisa|kanya/i.test(v.name || "")) || null;
+    showVoiceStatus(vs.length);
+  } catch (e) {}
+}
+
+const player = document.getElementById("audioPlayer");
+let audioUnlocked = false;
+
+// Detect iOS devices for mute switch hint
+try {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const iosHintEl = document.getElementById("iosHint");
+  if (isIOS && iosHintEl) iosHintEl.style.display = "inline";
+} catch (e) {}
+
+function showVoiceStatus() {
+  if (!voiceNameEl) return;
+  voiceNameEl.textContent = "ระบบเสียง: สตูดิโอ Neural AI (เสมือนคนจริง 100%)";
+}
+showVoiceStatus();
+
+function unlockAudio(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  audioUnlocked = true;
+  const banner = document.getElementById("audioBanner");
+  if (banner) banner.style.display = "none";
+
+  // Resume Web Audio Context if present
+  try {
+    if (!window.audioCtx) window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (window.audioCtx.state === "suspended") window.audioCtx.resume();
+  } catch (e) {}
+
+  // Unlock HTML5 media player
+  if (player && player.paused && !player.src) {
+    try {
+      player.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+      player.play().catch(() => {});
+    } catch (e) {}
+  }
+
+  // If currently active message has audio waiting, play it right now
+  if (active && active.audio) {
+    playAudioUrl(active.audio);
+  }
+}
+
+window.addEventListener("click", unlockAudio, { passive: true });
+window.addEventListener("touchstart", unlockAudio, { passive: true });
+
+if ("speechSynthesis" in window) {
+  pickThaiVoice();
+  speechSynthesis.onvoiceschanged = pickThaiVoice;
+}
+
+if (sndBtn) {
+  sndBtn.onclick = (e) => {
+    unlockAudio(e);
+    sndOn = !sndOn;
+    sndBtn.textContent = sndOn ? "🔊 เสียง: เปิด" : "🔇 เสียง: ปิด";
+    if (!sndOn) {
+      if (player) { try { player.pause(); } catch(e) {} }
+      if ("speechSynthesis" in window) speechSynthesis.cancel();
+    } else {
+      speak("SAGE", "ยินดีต้อนรับสู่ร้าน Sujiraporn Cafe’ ครับ", "audio/sample_sage.mp3");
+    }
+  };
+}
+
+const TEST_SAMPLES = [
+  { bot: "MOM", text: "ม้าชงลาเต้ร้อนๆ เสร็จแล้วนะลูก ค่อยๆ คุยกันนะ มีสติกับการใช้ชีวิตนะ", audio: "audio/sample_mom.mp3" },
+  { bot: "JOY", text: "ตู่ว่าเรื่องนี้พวกเราต้องวางแผนการเงินให้รอบคอบนะคะ ทุกคนต้องช่วยกันดูค่ะ", audio: "audio/sample_joy.mp3" },
+  { bot: "BOSS", text: "ยินดีต้อนรับสู่ร้าน Sujiraporn Cafe’ ครับ", audio: "audio/sample_boss.mp3" },
+  { bot: "SAGE", text: "สวัสดีครับ ผมอั่งม้อ นักวิเคราะห์การลงทุน ประจำร้าน Sujiraporn Cafe’ มองทุกอย่างด้วยข้อมูลและตัวเลขครับ", audio: "audio/sample_sage.mp3" },
+  { bot: "CHILL", text: "สวัสดีครับเพื่อนๆ ม่อตี๋เองครับ สบายๆ จิบกาแฟอุ่นๆ ปล่อยใจไปกับธรรมชาติที่ Sujiraporn Cafe’ กันครับ", audio: "audio/sample_chill.mp3" },
+];
+let testIdx = 0;
+
+if (testBtn) {
+  testBtn.onclick = (e) => {
+    unlockAudio(e);
+    const sample = TEST_SAMPLES[testIdx % TEST_SAMPLES.length];
+    testIdx++;
+    testBtn.textContent = "🎙 " + (sample.bot === "MOM" ? "ม้า (หญิงสูงอายุ)" : sample.bot === "JOY" ? "ตู่ (หญิงวัยกลางคน)" : sample.bot);
+    active = { bot: sample.bot, text: sample.text, audio: sample.audio };
+    bubbleUntil = millis() + 9000;
+    typed = 0;
+    speak(sample.bot, sample.text, sample.audio);
+  };
+}
+
+function playAudioUrl(url) {
+  if (!player) return;
+  try {
+    player.pause();
+    player.src = url;
+    player.currentTime = 0;
+    player.volume = 1.0;
+    const playPromise = player.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        audioUnlocked = true;
+        const banner = document.getElementById("audioBanner");
+        if (banner) banner.style.display = "none";
+        if (player.duration && isFinite(player.duration)) {
+          bubbleUntil = millis() + player.duration * 1000 + 1200;
+        }
+      }).catch(err => {
+        console.warn("Autoplay blocked by browser, showing tap prompt:", err);
+        const banner = document.getElementById("audioBanner");
+        if (banner && !audioUnlocked) banner.style.display = "flex";
+      });
+    }
+  } catch (err) {
+    console.error("playAudioUrl error:", err);
+  }
+}
+
+function speak(bot, text, audioUrl) {
+  if (!sndOn) return;
+  if (audioUrl) {
+    playAudioUrl(audioUrl);
+  } else {
+    fallbackSpeech(bot, text);
+  }
+}
+
+function fallbackSpeech(bot, text) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    pickThaiVoice();
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "th-TH";
+    if (thVoice) u.voice = thVoice;
+    if (bot === "MOM") { u.pitch = 0.8; u.rate = 0.82; }
+    else if (bot === "JOY") { u.pitch = 0.95; u.rate = 0.95; }
+    else if (bot === "SAGE") { u.pitch = 0.85; u.rate = 0.95; }
+    else { u.pitch = 1.0; u.rate = 0.92; }
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+</script>
+</body>
+</html>

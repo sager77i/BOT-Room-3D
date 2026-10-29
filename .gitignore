@@ -1,0 +1,15 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+
+# Audio cache generated at runtime (keep seed audio if desired)
+# audio/*.mp3
+!audio/msg_*.mp3
+
+# OS / Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
