@@ -11,8 +11,8 @@
   "workers_dev": true,
   "routes": [
     {
-      "pattern": "sager.app/*",
-      "zone_name": "sager.app"
+      "pattern": "botroom3d.sager.app",
+      "custom_domain": true
     }
   ]
 }
