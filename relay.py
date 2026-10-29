@@ -20,9 +20,9 @@ FEED = os.path.join(BASE, "dialogue.json")
 BOTS = [
     {
         "id": "MOM",
-        "name": "ม้า",
+        "name": "อาม้า",
         "color": "#fb7185",
-        "persona": "ม้า คนแม่ผู้ให้กำเนิดและเป็นผู้ก่อตั้งร้าน Sujiraporn Cafe' เป็นหญิงสูงอายุมาก ใจดี อบอุ่น มีเมตตา ยืนชงกาแฟอยู่ที่เคาน์เตอร์คอยพูดแทรกย้ำเตือนสติลูกๆ อยู่เสมอเรื่องความเสี่ยงในการใช้ชีวิตและการเงิน อย่าหลงเชื่อข่าวง่ายๆ มีสติ ไม่ทะเลาะเรื่องเมือง",
+        "persona": "อาม้า คนแม่ผู้ให้กำเนิดและเป็นผู้ก่อตั้งร้าน Sujiraporn Cafe' เป็นหญิงสูงอายุมาก ใจดี อบอุ่น มีเมตตา ยืนชงกาแฟอยู่ที่เคาน์เตอร์คอยพูดแทรกย้ำเตือนสติลูกๆ อยู่เสมอเรื่องความเสี่ยงในการใช้ชีวิตและการเงิน อย่าหลงเชื่อข่าวง่ายๆ มีสติ ไม่ทะเลาะเรื่องเมือง",
     },
     {
         "id": "BOSS",
@@ -476,14 +476,27 @@ def is_too_similar(new_txt, past_msgs):
                 return True
     return False
 
+def sync_to_cloud():
+    try:
+        subprocess.Popen(
+            ["cmd", "/c", "npx", "wrangler", "deploy"],
+            cwd=BASE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        )
+    except Exception as e:
+        print(f"sync_to_cloud error: {e}", file=sys.stderr)
+
 def main():
     msgs = [m for m in load() if m.get("bot") != "SYSTEM"]
     save(msgs)
+    sync_to_cloud()
     loop_count = 0
     while True:
         loop_count += 1
         for bot in BOTS:
-            # ให้อาม้ามีบทพูดมากขึ้น ร่วมสนทนาและเตืนสติลูกๆ ทุกรอบสม่ำเสมอ
+            # ให้อาม้ามีบทพูดมากขึ้น ร่วมสนทนาและเตือนสติลูกๆ ทุกรอบสม่ำเสมอ
             text = ask(bot, msgs)
             if text and not is_too_similar(text, msgs):
                 audio_url = make_audio(bot["id"], text)
@@ -497,6 +510,7 @@ def main():
                     entry["audio"] = audio_url
                 msgs.append(entry)
                 save(msgs)
+                sync_to_cloud()
             # โหมดประหยัดโควตา: เรียกข่างครั้งละ 300 วิ (เดิ 5 สก. ซึ่งหมดโควตาฟรี/วันทันทที)
             # ประหยัดให cron สามารถใช โมเดลฟรีย้ด ในเวลาตางห นได้
             time.sleep(300)

@@ -15,6 +15,13 @@
     font-family: "Noto Sans Thai", "Segoe UI", system-ui, sans-serif; }
   #ui { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
   
+    #topicBadge { position: absolute; top: 48px; left: 20px;
+    background: rgba(20, 12, 8, 0.88); border: 1px solid rgba(255, 180, 70, 0.4);
+    border-radius: 12px; padding: 4px 12px; font-size: 11.5px; color: #ffd98a;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    max-width: 85vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 10; pointer-events: auto; }
+
   #title { position: absolute; top: 16px; left: 20px; color: #fdf6ec;
     font-size: 22px; letter-spacing: 1px; font-weight: 700;
     text-shadow: 0 2px 12px rgba(255, 180, 70, 0.45); }
@@ -73,6 +80,7 @@
 <audio id="audioPlayer" playsinline preload="auto"></audio>
 <div id="ui">
   <div id="title">ร้าน Sujiraporn Cafe’</div>
+  <div id="topicBadge">🔥 Talk of The Town สดวันนี้: พืชสวนโลก 250 ล้าน · รื้อ 4 กองทุนภาษีบาป 1.4 หมื่นล้าน · มูลนิธิองค์กรทำดี · สวัสดิการ พ.ย. 2569</div>
 
   <div id="audioBanner" onclick="unlockAudio(event)">
     <span>🔊</span>
@@ -113,7 +121,7 @@ window.onerror = function (msg, url, line) {
 
 // Cast definition (4 พี่น้องแห่ง Sujiraporn Cafe’ + อาม้า เจ้าของร้าน)
 const BOTS = [
-  { id: "MOM",   name: "ม้า",   role: "☕ บาริสต้าผู้ก่อตั้งร้าน", col: [255, 140, 100], home: 0, isMom: true },
+  { id: "MOM",   name: "อาม้า",   role: "☕ บาริสต้าผู้ก่อตั้งร้าน", col: [255, 140, 100], home: 0, isMom: true },
   { id: "BOSS",  name: "ไถ่",     role: "👑 พี่ใหญ่ · ตั่วเฮีย", col: [210, 190, 140], home: -Math.PI / 2 },
   { id: "JOY",   name: "ตู่",     role: "🌸 อาเจ้ · แม่บ้านใหญ่", col: [255, 105, 180], home: 0 },
   { id: "SAGE",  name: "อั่งม้อ",  role: "⚡ หยี่เฮีย · นักลงทุน", col: [255, 215, 45],  home: Math.PI / 2 },
