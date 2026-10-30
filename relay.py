@@ -638,7 +638,7 @@ def main():
                 msgs.append(entry)
                 save(msgs, topic=topic_header)
                 sync_to_cloud()
-                print(f"[{entry['ts']}] {bot['name']}: {text} (Audio: {audio_url})")
+                print(f"[{entry['ts']}] {bot['name']}: {text} (Audio: {audio_url})", flush=True)
             # จังหวะตอบโต้ธรรมชาติในร้านกาแฟ 15 วินาทีต่อคน
             time.sleep(15)
 
