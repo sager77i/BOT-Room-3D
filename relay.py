@@ -483,67 +483,92 @@ VOICE_CONFIG = {
 }
 
 def make_audio(bot_id, text):
-    if not edge_tts:
-        return None
     try:
-        cfg = VOICE_CONFIG.get(bot_id, {"voice": "th-TH-NiwatNeural", "rate": "+0%", "pitch_factor": 1.0})
-        pf = cfg.get("pitch_factor", 1.0)
-        # แปลงคำย่อและสัญลักษณ์ที่ทำให้ TTS สะดุด
         clean_tts = re.sub(r'ฉก\.', 'ฉก', text)
         clean_tts = re.sub(r'กมธ\.', 'กรรมาธิการ', clean_tts)
         clean_tts = re.sub(r'ผบ\.', 'ผู้บัญชาการ', clean_tts)
         clean_tts = re.sub(r'อบจ\.', 'อบจ', clean_tts)
         clean_tts = re.sub(r'สว\.', 'สว', clean_tts)
         clean_tts = re.sub(r'สส\.', 'สส', clean_tts)
+        clean_tts = re.sub(r'จนท\.', 'เจ้าหน้าที่', clean_tts)
+        clean_tts = re.sub(r'รบ\.', 'รัฐบาล', clean_tts)
+        clean_tts = re.sub(r'China Airlines', 'ไชน่า แอร์ไลน์', clean_tts, flags=re.I)
+        clean_tts = re.sub(r'SMEs', 'เอสเอ็มอี', clean_tts, flags=re.I)
         safe_text = re.sub(r'[\s\-เแโใไ]+$', '', clean_tts).strip()
-        phonetic_text = safe_text.replace("หม่อตี๋", "ม่อตี๋") if bot_id in ["MOM", "JOY"] else safe_text
         if not safe_text:
             return None
-        h = hashlib.md5((bot_id + safe_text + cfg["rate"] + str(pf)).encode("utf-8")).hexdigest()[:12]
+
+        h = hashlib.md5((bot_id + safe_text + "real_female_v3").encode("utf-8")).hexdigest()[:12]
         fname = f"msg_{bot_id.lower()}_{h}.mp3"
         fpath = os.path.join(AUDIO_DIR, fname)
-        if not os.path.exists(fpath):
-            tmp_path = os.path.join(AUDIO_DIR, f"tmp_{bot_id.lower()}_{h}.mp3")
-            async def _gen():
-                attempts = [
-                    (cfg["voice"], cfg["rate"]),
-                    (cfg["voice"], "+0%"),
-                    ("th-TH-NiwatNeural", "-4%"),
-                    ("th-TH-NiwatNeural", "+0%"),
-                ]
-                for v, r in attempts:
-                    try:
-                        if os.path.exists(tmp_path):
-                            try: os.remove(tmp_path)
-                            except Exception: pass
-                        comm = edge_tts.Communicate(phonetic_text, v, rate=r)
-                        await asyncio.wait_for(comm.save(tmp_path), timeout=8)
-                        if os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 1000:
-                            return
-                    except Exception:
-                        pass
-                print(f"All TTS attempts finished for {bot_id}", file=sys.stderr)
-            asyncio.run(_gen())
+        if os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
+            return f"audio/{fname}"
 
-            if os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 1000:
-                if pf != 1.0 and FFMPEG_EXE and os.path.exists(FFMPEG_EXE):
-                    try:
-                        filter_str = f"asetrate=24000*{pf:.3f},atempo={1.0/pf:.3f}"
-                        res = subprocess.run([
-                            FFMPEG_EXE, "-y", "-i", tmp_path,
-                            "-af", filter_str,
-                            fpath
-                        ], capture_output=True, timeout=10)
-                        if res.returncode == 0 and os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
-                            try: os.remove(tmp_path)
-                            except Exception: pass
-                            return f"audio/{fname}"
-                    except Exception as fex:
-                        print(f"ffmpeg pitch error for {bot_id}: {fex}", file=sys.stderr)
-                try:
+        tmp_path = os.path.join(AUDIO_DIR, f"tmp_{fname}")
+
+        # Female bots (MOM and JOY) -> 100% Real Authentic Female Voice via Google TTS
+        if bot_id in ["MOM", "JOY"]:
+            try:
+                from gtts import gTTS
+                tts = gTTS(text=safe_text, lang="th")
+                tts.save(tmp_path)
+                
+                # MOM: calm, warm maternal pace with acoustic EQ
+                # JOY: lively, bright energetic pace with acoustic EQ
+                if bot_id == "MOM":
+                    filter_str = "atempo=0.92,equalizer=f=350:t=q:w=1:g=2.5"
+                else:
+                    filter_str = "atempo=1.08,equalizer=f=2500:t=q:w=1:g=2.5"
+
+                if FFMPEG_EXE and os.path.exists(FFMPEG_EXE):
+                    res = subprocess.run([
+                        FFMPEG_EXE, "-y", "-i", tmp_path,
+                        "-af", filter_str,
+                        fpath
+                    ], capture_output=True, timeout=15)
+                    if res.returncode == 0 and os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
+                        try: os.remove(tmp_path)
+                        except Exception: pass
+                        return f"audio/{fname}"
+
+                if os.path.exists(tmp_path):
                     os.replace(tmp_path, fpath)
+                    return f"audio/{fname}"
+            except Exception as gex:
+                print(f"gTTS error for {bot_id}: {gex}", file=sys.stderr)
+
+        # Male bots (BOSS, SAGE, CHILL) -> Distinct male neural voices via Edge-TTS
+        cfg = VOICE_CONFIG.get(bot_id, {"voice": "th-TH-NiwatNeural", "rate": "+0%", "pitch_factor": 1.0})
+        pf = cfg.get("pitch_factor", 1.0)
+        phonetic_text = safe_text
+
+        async def _gen():
+            try:
+                comm = edge_tts.Communicate(phonetic_text, cfg["voice"], rate=cfg["rate"])
+                await asyncio.wait_for(comm.save(tmp_path), timeout=10)
+            except Exception:
+                pass
+        asyncio.run(_gen())
+
+        if os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 1000:
+            if pf != 1.0 and FFMPEG_EXE and os.path.exists(FFMPEG_EXE):
+                try:
+                    filter_str = f"asetrate=24000*{pf:.3f},atempo={1.0/pf:.3f}"
+                    res = subprocess.run([
+                        FFMPEG_EXE, "-y", "-i", tmp_path,
+                        "-af", filter_str,
+                        fpath
+                    ], capture_output=True, timeout=10)
+                    if res.returncode == 0 and os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
+                        try: os.remove(tmp_path)
+                        except Exception: pass
+                        return f"audio/{fname}"
                 except Exception:
                     pass
+            try:
+                os.replace(tmp_path, fpath)
+            except Exception:
+                pass
 
         if os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
             return f"audio/{fname}"
@@ -551,7 +576,6 @@ def make_audio(bot_id, text):
     except Exception as ex:
         print(f"make_audio error for {bot_id}: {ex}", file=sys.stderr)
         return None
-
 
 def is_too_similar(new_txt, past_msgs):
     if not new_txt:
