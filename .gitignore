@@ -4,8 +4,13 @@ __pycache__/
 *$py.class
 *.log
 
-# Audio cache generated at runtime (keep seed audio if desired)
-# audio/*.mp3
+# Local secrets & configs
+config.json
+*.env*
+!.env.example
+
+# Audio cache generated at runtime
+audio/tmp_*
 !audio/msg_*.mp3
 
 # OS / Editor artifacts
@@ -18,5 +23,3 @@ Thumbs.db
 .wrangler
 .dev.vars*
 !.dev.vars.example
-.env*
-!.env.example

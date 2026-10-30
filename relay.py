@@ -69,15 +69,19 @@ _current_headline_index = 0
 def fetch_all_thai_news():
     global _last_news_fetch, _news_cache_pool
     now = time.time()
-    if now - _last_news_fetch < 600 and _news_cache_pool:
+    # รีเฟรชข่าวสดใหม่ทุก 5 นาที เพื่อให้บทสนทนาทันกระแส Talk of The Town เสมอ
+    if now - _last_news_fetch < 300 and _news_cache_pool:
         return _news_cache_pool
 
     feeds = [
         "https://news.thaipbs.or.th/rss/politic.xml",
         "https://news.thaipbs.or.th/rss/social.xml",
+        "https://news.thaipbs.or.th/rss/economic.xml",
         "https://www.matichon.co.th/politics/feed",
+        "https://www.matichon.co.th/economy/feed",
         "https://www.matichon.co.th/feed",
         "https://www.khaosod.co.th/politics/feed",
+        "https://www.khaosod.co.th/breaking-news/feed",
         "https://www.thairath.co.th/rss/news",
     ]
     collected = []
@@ -125,7 +129,7 @@ def get_live_talk_of_the_town():
         selected.append(pool[(idx + i) % len(pool)])
     _current_headline_index = (idx + 1) % len(pool)
     
-    return " // ".join(selected)
+    return " • ".join(selected)
 
 SKIP_PREFIXES = (
     "⚠", "!!!", "This is Meta", "prompts and completions",
@@ -154,103 +158,60 @@ HEADER = (
     "- ห้ามใช้คำประหลาดหรือคำซ้ำเช่น uf uf หรือคำสั่งระบบ เช่น FINISH_THIS_TURN เด็ดขาด! "
     "- ห้ามใส่ชื่อตัวเองหรือคำเรียกคนอื่นขึ้นต้นข้อความ เช่น อย่าพิมพ์ 'ม้า', 'ไถ่', 'ตั่วเฮีย', 'ม้อ', 'เจ้า', 'อั่งม้อ', 'อั๊ว', 'พวกลื้อ' นำหน้าข้อความ ให้พูดได้เลยทันที "
     "ตอบเป็นภาษาไทยล้วน 1-2 ประโยคสั้นๆ สนทนาอบอุ่นและเป็นกันเองเหมือนครอบครัวนั่งคุยกันในร้านกาแฟ. "
-    "ส่งเฉพาะคำตอบของคุณ ไม่มีเครื่องหมายคำพูด ไม่มีคำบรรยายฉาก."
+    "ส่งเฉพาะคำตอบของคุณ ไม่มีเครื่องหมายคำพูด ไม่มีคำบรรยายฉาก ห้ามพิมพ์ภาษาอังกฤษเด็ดขาด.\n"
+    "บทพูดภาษาไทยของ {name}:"
 )
 
 def load():
     try:
         with open(FEED, encoding="utf-8") as f:
-            return json.load(f).get("messages", [])
+            d = json.load(f)
+            if isinstance(d, dict):
+                return d.get("messages", [])
+            elif isinstance(d, list):
+                return d
+            return []
     except Exception:
         return []
 
 
-def save(msgs):
+def save(msgs, topic=None):
     tmp = FEED + ".tmp"
+    data = {
+        "topic": topic or f"🔥 Talk of The Town สดใหม่วันนี้: {get_live_talk_of_the_town()}",
+        "updated_at": datetime.datetime.now().isoformat(timespec="seconds"),
+        "messages": msgs[-60:]
+    }
     with open(tmp, "w", encoding="utf-8") as f:
-        json.dump({"messages": msgs[-60:]}, f, ensure_ascii=False)
+        json.dump(data, f, ensure_ascii=False, indent=2)
     os.replace(tmp, FEED)
 
 
-THAI_NUM_WORDS = ['ศูนย์', 'หนึ่ง', 'เอ็ด', 'สอง', 'ยี่', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า', 'สิบ', 'สิม', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน']
-THAI_NUM_REGEX = r'(?:' + '|'.join(THAI_NUM_WORDS) + r')+'
-
-D_MAP = {'ศูนย์': 0, 'หนึ่ง': 1, 'เอ็ด': 1, 'สอง': 2, 'ยี่': 2, 'สาม': 3, 'สี่': 4,
-         'ห้า': 5, 'หก': 6, 'เจ็ด': 7, 'แปด': 8, 'เก้า': 9}
-MULT_MAP = {'สิบ': 10, 'สิม': 10, 'ร้อย': 100, 'พัน': 1000, 'หมื่น': 10000, 'แสน': 100000, 'ล้าน': 1000000}
-
-def parse_thai_chunk(s):
-    tokens = []
-    keys = sorted(list(D_MAP.keys()) + list(MULT_MAP.keys()), key=len, reverse=True)
-    rem = s
-    while rem:
-        matched = False
-        for k in keys:
-            if rem.startswith(k):
-                tokens.append(k)
-                rem = rem[len(k):]
-                matched = True
-                break
-        if not matched:
-            return None
-    val = 0
-    digit = 0
-    for tok in tokens:
-        if tok in D_MAP:
-            digit = D_MAP[tok]
-        elif tok in MULT_MAP:
-            m = MULT_MAP[tok]
-            if digit == 0 and tok in ['สิบ', 'สิม']:
-                digit = 1
-            val += (digit if digit > 0 else 1) * m
-            digit = 0
-    val += digit
-    return val
+PROTECTED_WORDS = [
+    "ความสัมพันธ์", "สัมพันธภาพ", "สัมพันธ์", "ผูกพัน", "พันธบัตร", "พันธมิตร", "พันธสัญญา",
+    "พิพิธภัณฑ์", "พันตำรวจ", "ร้อยตำรวจ", "พันเอก", "ร้อยเอก", "พันโท", "ร้อยโท", "พันตรี", "ร้อยตรี",
+    "สารพัน", "จัดสรร", "สังสรรค์", "รังสรรค์", "สวรรค์", "มหัศจรรย์", "รางวัล",
+    "ความเสี่ยง", "เสี่ยง", "เรียบร้อย"
+]
 
 def convert_thai_numbers_to_arabic(text):
     if not text:
         return ""
-    # Protect common words that contain number syllables
-    protected = {
-        "__RISK__": "ความเสี่ยง",
-        "__RISK2__": "เสี่ยง",
-        "__READY__": "เรียบร้อย",
-        "__BOND__": "พันธบัตร",
-        "__ALLY__": "พันธมิตร",
-        "__TIE__": "ผูกพัน"
-    }
-    for placeholder, orig in protected.items():
-        text = text.replace(orig, placeholder)
-
-    # 1. Decimal numbers e.g. สี่จุดสี่สิบแปด -> 4.48
-    def repl_decimal(m):
-        v1 = parse_thai_chunk(m.group(1))
-        v2 = parse_thai_chunk(m.group(2))
-        if v1 is not None and v2 is not None:
-            return f" {v1}.{v2} "
-        return m.group(0)
-
-    text = re.sub(f'({THAI_NUM_REGEX})จุด({THAI_NUM_REGEX})', repl_decimal, text)
-
-    # 2. Whole numbers e.g. แปดหมื่นหนึ่งพันยี่สิบสี่ -> 81,024
-    def repl_num(m):
-        s = m.group(0)
-        v = parse_thai_chunk(s)
-        if v is not None:
-            formatted = f"{v:,}" if v >= 1000 else str(v)
-            return f" {formatted} "
-        return s
-
-    text = re.sub(THAI_NUM_REGEX, repl_num, text)
-
-    # 3. Thai digits ๐-๙
+    # 1. Thai digits ๐-๙ -> 0-9
     for td, ad in [('๐', '0'), ('๑', '1'), ('๒', '2'), ('๓', '3'), ('๔', '4'),
                    ('๕', '5'), ('๖', '6'), ('๗', '7'), ('๘', '8'), ('๙', '9')]:
         text = text.replace(td, ad)
 
+    # 2. Protect vocabulary containing number syllables
+    for i, w in enumerate(PROTECTED_WORDS):
+        text = text.replace(w, f"__PROT_{i}__")
+
+    # 3. Protect magnitudes following Arabic digits (e.g. 250 ล้าน, 1.4 หมื่นล้าน, 2 หมื่น, 5 แสน)
+    text = re.sub(r'(\d+(?:\.\d+)?)\s*(ล้าน|หมื่น|แสน|พัน|ร้อย)', r'\g<1> \g<2>', text)
+
     # Restore protected words
-    for placeholder, orig in protected.items():
-        text = text.replace(placeholder, orig)
+    for i, w in enumerate(PROTECTED_WORDS):
+        text = text.replace(f"__PROT_{i}__", w)
 
     return re.sub(r'\s{2,}', ' ', text).strip()
 
@@ -282,14 +243,36 @@ ENGLISH_TO_THAI = [
 
 
 def clean(raw, bot_id=None):
+    if not raw:
+        return ""
+    # กำจัดแท็กความคิด <think>...</think> ของโมเดลสาย Reasoning
+    raw = re.sub(r'<think>.*?</think>', '', raw, flags=re.DOTALL)
+    # กำจัดบทบรรยายฉากหรือท่าทางในเครื่องหมายดอกจัน เช่น **อาม้ายิ้มกว้าง**
+    raw = re.sub(r'\*\*.*?\*\*', '', raw)
+    raw = re.sub(r'\(.*?\)', '', raw)
+    
+    ENGLISH_THOUGHT_PREFIXES = (
+        "The user", "Here's", "Here is", "I need to", "Looking at", "In this",
+        "I should", "Roleplay", "As an AI", "Let's think", "Step 1", "Analysis:",
+        "Sure,", "Okay,", "Certainly"
+    )
+    
     lines = []
     for ln in raw.splitlines():
         s = ln.strip()
         if not s:
             continue
-        if s.startswith(SKIP_PREFIXES):
+        if s.startswith(SKIP_PREFIXES) or s.startswith(ENGLISH_THOUGHT_PREFIXES):
             continue
+        # กำจัดขั้นตอนวิเคราะห์ภาษาอังกฤษ เช่น 1. **Analyze:**
+        if re.match(r'^\d+\.\s+\*\*.*?\*\*', s):
+            continue
+        if re.match(r'^[a-zA-Z\s\*#\-:]{10,}$', s): # บรรทัดที่เป็นภาษาอังกฤษล้วน
+            continue
+        if s.startswith(('Output:', 'Output Generation:', 'Response:', 'บทพูด:', 'คำตอบ:')):
+            s = re.sub(r'^(Output|Output Generation|Response|บทพูด|คำตอบ):\s*', '', s, flags=re.IGNORECASE)
         lines.append(s)
+    
     text = " ".join(lines).strip()[:400]
     
     # Strip any URLs or Markdown link artifacts before stripping letters
@@ -333,6 +316,7 @@ def clean(raw, bot_id=None):
     # Strip broken markdown punctuation fragments (e.g. [ ](://..//-/-))
     text = re.sub(r'[\[\]\(\):/\\_~*`><]+', ' ', text)
     text = re.sub(r'^[.\s\'",\-]+', '', text)
+    text = re.sub(r'["\'“”]', '', text)
     
     # Strip all emojis and special pictograms
     text = re.sub(r'[\U00010000-\U0010ffff]', '', text)
@@ -344,16 +328,92 @@ def clean(raw, bot_id=None):
     # Strip non-Thai, non-digit, non-basic punctuation characters to prevent TTS crashes
     text = re.sub(r'[^\u0e00-\u0e7fa-zA-Z0-9\s\.\,\-\:\;!\?\'\"]+', '', text)
     # Strip any trailing incomplete vowels or punctuation that choke TTS parsers
+    # Strip dangling trailing prepositions/conjunctions
+    text = re.sub(r'[\s,]+(และ|หรือ|กับ|ว่า|ที่|ได้|อย่า|เรื่อง|แต่|ของ|ใน|ถ้า|ก็|โดยเฉพาะ|เช่น|ครับเรื่อง|ค่ะเรื่อง|นะลูกเรื่อง)[\s\.\-]*$', '', text)
     text = re.sub(r'[\s\-เแโใไ]+$', '', text)
 
-    text = re.sub(r'\s{2,}', ' ', text)
-    return text.strip()
+    text = re.sub(r'\s{2,}', ' ', text).strip()
+    # ตรวจสอบความบริสุทธิ์ของภาษาไทย: สัดส่วนตัวอักษรไทยต้องไม่น้อยกว่า 70%
+    thai_letters = len(re.findall(r'[\u0e00-\u0e7f]', text))
+    eng_letters = len(re.findall(r'[a-zA-Z]', text))
+    total_letters = thai_letters + eng_letters
+    if thai_letters < 10 or total_letters == 0 or (thai_letters / total_letters) < 0.70:
+        return None
+    return text
 
 
-HERMES = r"C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\hermes.exe"
+OPENROUTER_MODELS = [
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "poolside/laguna-s-2.1:free",
+    "openrouter/free",
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it:free",
+]
+
+def get_api_key():
+    k = os.environ.get("OPENROUTER_API_KEY")
+    if k:
+        return k
+    candidate_paths = [
+        os.path.join(BASE, "config.json"),
+        os.path.join(os.path.dirname(BASE), "Antigravity", "Hermes_Gemini_Monitor", "config.json"),
+        r"C:\Users\sager\Qsync\Antigravity\Hermes_Gemini_Monitor\config.json",
+        r"C:\Users\PONG\Qsync\Antigravity\Hermes_Gemini_Monitor\config.json",
+    ]
+    for p in candidate_paths:
+        if os.path.exists(p):
+            try:
+                with open(p, encoding="utf-8") as f:
+                    cfg = json.load(f)
+                    if cfg.get("apiKey"):
+                        return cfg["apiKey"]
+            except Exception:
+                pass
+    return ""
+
+def ask_openrouter(prompt):
+    api_key = get_api_key()
+    for model_name in OPENROUTER_MODELS:
+        try:
+            req = urllib.request.Request("https://openrouter.ai/api/v1/chat/completions", headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://botroom3d.sager.app",
+                "X-Title": "BOT Room 3D"
+            })
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "คุณคือตัวละครสนทนาภาษาไทยในคาเฟ่ Sujiraporn Cafe' ตอบเฉพาะข้อความบทพูดภาษาไทยสั้นๆ 1-2 ประโยคเท่านั้น ห้ามแสดงความคิด ห้ามมีคำอธิบาย ห้ามมีภาษาอังกฤษ ไม่ใส่อีโมจิ"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                "max_tokens": 800,
+                "temperature": 0.75
+            }
+            data = json.dumps(payload).encode("utf-8")
+            with urllib.request.urlopen(req, data=data, timeout=25) as resp:
+                res = json.loads(resp.read().decode("utf-8"))
+                choices = res.get("choices", [])
+                if choices:
+                    c = choices[0].get("message", {}).get("content")
+                    if c and c.strip():
+                        return c.strip()
+        except urllib.error.HTTPError as he:
+            print(f"OpenRouter ({model_name}) HTTP {he.code}: {he.reason}", file=sys.stderr)
+            time.sleep(1)
+        except Exception as ex:
+            print(f"OpenRouter ({model_name}) error: {ex}", file=sys.stderr)
+            time.sleep(1)
+    return None
 
 def ask(bot, history):
-    raw_hist = "\n".join(f"{m.get('name', m['bot'])}: {m['text']}" for m in history[-10:] if m["bot"] != "SYSTEM")
+    raw_hist = "\n".join(f"{m.get('name', m['bot'])}: {m['text']}" for m in history[-10:] if m.get("bot") != "SYSTEM")
     lines = [ln for ln in raw_hist.split("\n") if "rate-limited" not in ln.lower() and "429" not in ln]
     hist = "\n".join(lines) if lines else ""
     talk_of_the_town = get_live_talk_of_the_town()
@@ -364,32 +424,55 @@ def ask(bot, history):
         topic=topic,
         history=hist or "(เพิ่งเริ่มบทสนทนารอบใหม่ ชวนพี่น้องในร้าน Sujiraporn Cafe’ คุยประเด็น Talk of The Town สดๆ วันนี้)"
     )
-    proc = None
-    try:
-        # print("DEBUG: prompt=", prompt[:200])
-        print("DEBUG: model=", "laguna:free")
-        proc = subprocess.run(
-            [HERMES, "chat", "-q", prompt, "-Q", "--provider", "openrouter", "--model", "laguna:free"],
-            input=b"y\n",
-            capture_output=True,
-            timeout=280,
-        )
-        raw = (proc.stdout or b"")
-        try:
-            text = raw.decode("utf-8")
-        except UnicodeDecodeError:
-            text = raw.decode("utf-8", errors="replace")
-        return clean(text, bot_id=bot["id"]) or None
-    except Exception as e:
-        print(f"ERROR in ask({bot['id']}): {e}", file=sys.stderr)
-        if proc is not None and hasattr(proc, 'stdout'):
-            print(f"stdout: {proc.stdout[:200]}", file=sys.stderr)
-        return None
+
+    # 1. Direct OpenRouter HTTP with automatic model failover
+    text = ask_openrouter(prompt)
+    if text:
+        cleaned = clean(text, bot_id=bot["id"])
+        if cleaned:
+            return cleaned
+
+    # 2. Secondary fallback: Hermes CLI if present on this machine
+    hermes_candidates = [
+        r"C:\Users\sager\AppData\Local\hermes\hermes-agent\venv\Scripts\hermes.exe",
+        r"C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\hermes.exe",
+        "hermes.exe",
+        "hermes"
+    ]
+    for hermes_bin in hermes_candidates:
+        if os.path.exists(hermes_bin):
+            try:
+                proc = subprocess.run(
+                    [hermes_bin, "chat", "-q", prompt, "-Q", "--provider", "openrouter", "--model", "openrouter/free"],
+                    input=b"y\n",
+                    capture_output=True,
+                    timeout=60,
+                )
+                raw = proc.stdout or b""
+                try:
+                    out = raw.decode("utf-8")
+                except UnicodeDecodeError:
+                    out = raw.decode("utf-8", errors="replace")
+                cleaned = clean(out, bot_id=bot["id"])
+                if cleaned:
+                    return cleaned
+            except Exception as e:
+                print(f"Hermes fallback error: {e}", file=sys.stderr)
+    return None
 
 
 AUDIO_DIR = os.path.join(BASE, "audio")
 os.makedirs(AUDIO_DIR, exist_ok=True)
-FFMPEG_EXE = r"C:\Users\PONG\AppData\Local\hermes\tools\ffmpeg-9.0.1-win32-x64\bin\ffmpeg.EXE"
+FFMPEG_EXE = None
+for p in [
+    r"C:\Users\sager\AppData\Local\hermes\tools\ffmpeg-9.0.1-win32-x64\bin\ffmpeg.EXE",
+    r"C:\Users\PONG\AppData\Local\hermes\tools\ffmpeg-9.0.1-win32-x64\bin\ffmpeg.EXE",
+    "ffmpeg.exe",
+    "ffmpeg",
+]:
+    if os.path.exists(p):
+        FFMPEG_EXE = p
+        break
 
 VOICE_CONFIG = {
     "MOM": {"voice": "th-TH-PremwadeeNeural", "rate": "-8%", "pitch_factor": 1.0},
@@ -405,7 +488,14 @@ def make_audio(bot_id, text):
     try:
         cfg = VOICE_CONFIG.get(bot_id, {"voice": "th-TH-NiwatNeural", "rate": "+0%", "pitch_factor": 1.0})
         pf = cfg.get("pitch_factor", 1.0)
-        safe_text = re.sub(r'[\s\-เแโใไ]+$', '', text).strip()
+        # แปลงคำย่อและสัญลักษณ์ที่ทำให้ TTS สะดุด
+        clean_tts = re.sub(r'ฉก\.', 'ฉก', text)
+        clean_tts = re.sub(r'กมธ\.', 'กรรมาธิการ', clean_tts)
+        clean_tts = re.sub(r'ผบ\.', 'ผู้บัญชาการ', clean_tts)
+        clean_tts = re.sub(r'อบจ\.', 'อบจ', clean_tts)
+        clean_tts = re.sub(r'สว\.', 'สว', clean_tts)
+        clean_tts = re.sub(r'สส\.', 'สส', clean_tts)
+        safe_text = re.sub(r'[\s\-เแโใไ]+$', '', clean_tts).strip()
         phonetic_text = safe_text.replace("หม่อตี๋", "ม่อตี๋") if bot_id in ["MOM", "JOY"] else safe_text
         if not safe_text:
             return None
@@ -415,34 +505,28 @@ def make_audio(bot_id, text):
         if not os.path.exists(fpath):
             tmp_path = os.path.join(AUDIO_DIR, f"tmp_{bot_id.lower()}_{h}.mp3")
             async def _gen():
-                # Attempt 1: rate only via edge-tts (never send pitch directly to avoid NoAudioReceived)
-                try:
-                    comm = edge_tts.Communicate(phonetic_text, cfg["voice"], rate=cfg["rate"])
-                    await comm.save(tmp_path)
-                    return
-                except Exception:
-                    pass
-                # Attempt 2: default rate
-                try:
-                    comm = edge_tts.Communicate(phonetic_text, cfg["voice"])
-                    await comm.save(tmp_path)
-                    return
-                except Exception:
-                    pass
-                # Attempt 3: Niwat fallback
-                try:
-                    if bot_id in ["MOM", "JOY"]:
-                        comm = edge_tts.Communicate(phonetic_text, "th-TH-PremwadeeNeural")
-                    else:
-                        comm = edge_tts.Communicate(phonetic_text, "th-TH-NiwatNeural")
-                    await comm.save(tmp_path)
-                    return
-                except Exception as ex:
-                    print(f"All TTS attempts failed for {bot_id}: {ex}", file=sys.stderr)
+                attempts = [
+                    (cfg["voice"], cfg["rate"]),
+                    (cfg["voice"], "+0%"),
+                    ("th-TH-NiwatNeural", "-4%"),
+                    ("th-TH-NiwatNeural", "+0%"),
+                ]
+                for v, r in attempts:
+                    try:
+                        if os.path.exists(tmp_path):
+                            try: os.remove(tmp_path)
+                            except Exception: pass
+                        comm = edge_tts.Communicate(phonetic_text, v, rate=r)
+                        await asyncio.wait_for(comm.save(tmp_path), timeout=8)
+                        if os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 1000:
+                            return
+                    except Exception:
+                        pass
+                print(f"All TTS attempts finished for {bot_id}", file=sys.stderr)
             asyncio.run(_gen())
 
             if os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 1000:
-                if pf != 1.0 and os.path.exists(FFMPEG_EXE):
+                if pf != 1.0 and FFMPEG_EXE and os.path.exists(FFMPEG_EXE):
                     try:
                         filter_str = f"asetrate=24000*{pf:.3f},atempo={1.0/pf:.3f}"
                         res = subprocess.run([
@@ -486,9 +570,40 @@ def is_too_similar(new_txt, past_msgs):
                 return True
     return False
 
+_last_cloud_sync_time = 0
+_cloud_sync_proc = None
+
 def sync_to_cloud():
+    global _last_cloud_sync_time, _cloud_sync_proc
+    # 1. Mirror dialogue.json and audio to C:\Users\PONG\bot-room for local Tailscale/port 80
+    alt_dir = r"C:\Users\PONG\bot-room"
+    if os.path.exists(alt_dir) and os.path.abspath(alt_dir) != os.path.abspath(BASE):
+        try:
+            import shutil
+            alt_dialogue = os.path.join(alt_dir, "dialogue.json")
+            shutil.copyfile(FEED, alt_dialogue)
+            alt_audio = os.path.join(alt_dir, "audio")
+            os.makedirs(alt_audio, exist_ok=True)
+            if os.path.exists(AUDIO_DIR):
+                for f in os.listdir(AUDIO_DIR):
+                    if f.endswith(".mp3"):
+                        src = os.path.join(AUDIO_DIR, f)
+                        dst = os.path.join(alt_audio, f)
+                        if not os.path.exists(dst):
+                            shutil.copyfile(src, dst)
+        except Exception:
+            pass
+
+    # 2. Deploy to Cloudflare Workers custom domain botroom3d.sager.app (debounced every 60s)
+    now = time.time()
+    if _cloud_sync_proc is not None and _cloud_sync_proc.poll() is None:
+        return # Still running previous deploy
+    if now - _last_cloud_sync_time < 60:
+        return # Debounce to avoid flooding
+
     try:
-        subprocess.Popen(
+        _last_cloud_sync_time = now
+        _cloud_sync_proc = subprocess.Popen(
             ["cmd", "/c", "npx", "wrangler", "deploy"],
             cwd=BASE,
             stdout=subprocess.DEVNULL,
@@ -500,13 +615,15 @@ def sync_to_cloud():
 
 def main():
     msgs = [m for m in load() if m.get("bot") != "SYSTEM"]
-    save(msgs)
+    current_topic = get_live_talk_of_the_town()
+    save(msgs, topic=f"🔥 Talk of The Town สดใหม่วันนี้: {current_topic}")
     sync_to_cloud()
     loop_count = 0
     while True:
         loop_count += 1
+        current_topic = get_live_talk_of_the_town()
+        topic_header = f"🔥 Talk of The Town สดใหม่วันนี้: {current_topic}"
         for bot in BOTS:
-            # ให้อาม้ามีบทพูดมากขึ้น ร่วมสนทนาและเตือนสติลูกๆ ทุกรอบสม่ำเสมอ
             text = ask(bot, msgs)
             if text and not is_too_similar(text, msgs):
                 audio_url = make_audio(bot["id"], text)
@@ -519,11 +636,14 @@ def main():
                 if audio_url:
                     entry["audio"] = audio_url
                 msgs.append(entry)
-                save(msgs)
+                save(msgs, topic=topic_header)
                 sync_to_cloud()
-            # โหมดประหยัดโควตา: เรียกข่างครั้งละ 300 วิ (เดิ 5 สก. ซึ่งหมดโควตาฟรี/วันทันทที)
-            # ประหยัดให cron สามารถใช โมเดลฟรีย้ด ในเวลาตางห นได้
-            time.sleep(600)  # อัปเดตบทสนทนาข่าว Talk of The Town ทุก 10 นาที  # อัปเดตบทสนทนาข่าว Talk of The Town ทุก 10 นาที
+                print(f"[{entry['ts']}] {bot['name']}: {text} (Audio: {audio_url})")
+            # จังหวะตอบโต้ธรรมชาติในร้านกาแฟ 15 วินาทีต่อคน
+            time.sleep(15)
+
+        # จังหวะพักผ่อนระหว่างรอบ 45 วินาที และดึงข่าว Talk of the Town สดใหม่รอบต่อไป
+        time.sleep(45)
 
 
 if __name__ == "__main__":

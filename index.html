@@ -274,6 +274,8 @@ let pullErrors = 0;
 let pullOk = false;
 const statusEl = document.getElementById("live");
 
+const seenSignatures = new Set();
+
 async function pull() {
   try {
     const r = await fetch("dialogue.json?_=" + Date.now());
@@ -281,30 +283,38 @@ async function pull() {
     const j = await r.json();
     const msgs = j.messages || [];
     
+    // อัปเดตหัวข้อประเด็น Talk of The Town สดใหม่แบบเรียลไทม์
+    if (j.topic) {
+      const tb = document.getElementById("topicBadge");
+      if (tb && tb.textContent !== j.topic) {
+        tb.textContent = j.topic;
+      }
+    }
+
     // Filter valid chat messages with audio
     const valid = msgs.filter(m => m.bot !== "SYSTEM" && m.text);
     if (valid.length > 0) {
       historyPool = valid;
     }
 
-    if (isFirstPull) {
-      seen = msgs.length;
-      isFirstPull = false;
-      pullOk = true;
-      pullErrors = 0;
-    } else if (msgs.length > seen) {
-      for (let i = seen; i < msgs.length; i++) {
-        const m = msgs[i];
-        if (m.bot !== "SYSTEM") queue.push(m);
+    // ดึงบทสนทนาใหม่เข้าคิวเล่นทันที ตรวจสอบจาก Timestamp และข้อความ
+    for (const m of msgs) {
+      if (m.bot === "SYSTEM" || !m.text) continue;
+      const sig = (m.ts || "") + "_" + m.bot + "_" + m.text.slice(0, 30);
+      if (!seenSignatures.has(sig)) {
+        seenSignatures.add(sig);
+        if (!isFirstPull) {
+          queue.push(m);
+        }
       }
-      seen = msgs.length;
     }
+    isFirstPull = false;
+    pullOk = true;
     pullErrors = 0;
   } catch (e) {
     pullErrors++;
-    // Update status indicator so mobile can see the problem
     if (statusEl && pullErrors > 2 && pullErrors % 10 === 0) {
-      statusEl.innerHTML = '<i></i>⚠ เชื่อมต่อนำเท็ต — หน้ำจอนีเ้ หนี้อาจไม่วิ้ ง';
+      statusEl.innerHTML = '<i></i>⚠ การเชื่อมต่อขัดข้อง — กำลังลองใหม่...';
       statusEl.style.color = '#ff6b6b';
     }
   }

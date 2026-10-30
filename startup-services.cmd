@@ -9,14 +9,14 @@ rem 2. Start Hermes Web Dashboard on Port 9119 (for Tailscale https://nuc.tail91
 start "" /b "C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\hermes.exe" dashboard --port 9119 --host 127.0.0.1 --no-open --skip-build
 
 rem 3. Start Bot Room HTTP Server on Port 8099
-start "" /b "C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe" "C:\Users\PONG\bot-room\server.py"
+start "" /b "C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe" "C:\Users\PONG\Qsync\My Project on Github\BOT Room 3D\server.py"
 
-rem 4. Start Bot Room Relay AI Engine
+rem 4. Start Bot Room Relay AI Engine (Talk of The Town 24/7 Engine & Cloudflare Sync)
 timeout /t 5 /nobreak >nul
-start "" /b "C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe" "C:\Users\PONG\bot-room\relay.py"
+start "" /b "C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe" "C:\Users\PONG\Qsync\My Project on Github\BOT Room 3D\relay.py"
 
 rem 5. Start Bot Room Proxy (port 80 -> Bot Room 8099 / Usage Monitor 3001)
-start "proxy" /b "C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe" "C:\Users\PONG\bot-room\proxy.py"
+start "proxy" /b "C:\Users\PONG\AppData\Local\hermes\hermes-agent\venv\Scripts\python.exe" "C:\Users\PONG\Qsync\My Project on Github\BOT Room 3D\proxy.py"
 tailscale serve --bg http://127.0.0.1:80
 
 rem 6. Start Hermes Gateway (for Telegram, Discord, etc.)
