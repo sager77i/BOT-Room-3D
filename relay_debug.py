@@ -29,7 +29,7 @@ BOTS = [
         "id": "MOM",
         "name": "อาม้า",
         "color": "#fb7185",
-        "persona": "อาม้า คนแม่ผู้ให้กำเนิดและเป็นผู้ก่อตั้งร้าน Sujiraporn Cafe\' เป็นหญิงชราสูงอายุมาก (คุณยาย/อาม้าแก่) ใจดี อบอุ่น มีเมตตา ยืนชงกาแฟอยู่ที่เคาน์เตอร์ พูดจาเนิบช้า สุภาพ อ่อนโยน เอ็นดูลูกๆ มักเรียกผู้ฟังว่า \'ลูกๆ\', \'ลูกเอ๊ย\', \'ลูกจ๋า\' ใช้คำลงท้ายของผู้หญิงสูงวัย เช่น \'นะลูก\', \'จ้ะ\', \'จ๊ะ\', \'นะคะ\', \'ค่ะ\' (ห้ามพูดคำว่า \'ครับ\' หรือ \'นะครับ\' เด็ดขาด!) คอยเตือนสติลูกๆ เรื่องชีวิตและการเงิน อย่าหลงเชื่อข่าวง่ายๆ มีสติ ไม่ทะเลาะเรื่องการเมือง",
+        "persona": "อาม้า คนแม่ผู้ให้กำเนิดและเป็นผู้ก่อตั้งร้าน Sujiraporn Cafe\' เป็นหญิงชราสูงอายุมาก (คุณยาย/อาม้าแก่) ใจดี อบอุ่น มีเมตตา ยืนชงกาแฟอยู่ที่เคาน์เตอร์ พูดจาคล่องแคล่ว อบอุ่น เป็นธรรมชาติ สุภาพ อ่อนโยน เอ็นดูลูกๆ มักเรียกผู้ฟังว่า \'ลูกๆ\', \'ลูกเอ๊ย\', \'ลูกจ๋า\' ใช้คำลงท้ายของผู้หญิงสูงวัย เช่น \'นะลูก\', \'จ้ะ\', \'จ๊ะ\', \'นะคะ\', \'ค่ะ\' (ห้ามพูดคำว่า \'ครับ\' หรือ \'นะครับ\' เด็ดขาด!) คอยเตือนสติลูกๆ เรื่องชีวิตและการเงิน อย่าหลงเชื่อข่าวง่ายๆ มีสติ ไม่ทะเลาะเรื่องการเมือง",
     },
     {
         "id": "BOSS",
@@ -449,7 +449,7 @@ def make_audio(bot_id, text):
         if not safe_text:
             return None
 
-        h = hashlib.md5((bot_id + safe_text + "elder_female_v4").encode("utf-8")).hexdigest()[:12]
+        h = hashlib.md5((bot_id + safe_text + "elder_mom_natural_v5").encode("utf-8")).hexdigest()[:12]
         fname = f"msg_{bot_id.lower()}_{h}.mp3"
         fpath = os.path.join(AUDIO_DIR, fname)
         if os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
@@ -468,7 +468,7 @@ def make_audio(bot_id, text):
                 # JOY: lively, bright energetic pace with acoustic EQ
                 if bot_id == "MOM":
                     # Elderly female voice: slightly lower pitch, slower tempo, warm chest resonance, soft highs
-                    filter_str = "rubberband=pitch=0.88:tempo=0.83:formant=preserved:pitchq=quality,equalizer=f=320:t=q:w=1:g=3.5,equalizer=f=4500:t=q:w=1:g=-3.0"
+                    filter_str = "rubberband=pitch=0.92:tempo=0.96:formant=preserved:pitchq=quality,equalizer=f=320:t=q:w=1:g=2.5,equalizer=f=4500:t=q:w=1:g=-2.0"
                 else:
                     # Young female voice: lively, energetic tempo with treble clarity
                     filter_str = "atempo=1.06,equalizer=f=2500:t=q:w=1:g=2.5"
@@ -485,7 +485,7 @@ def make_audio(bot_id, text):
                         return f"audio/{fname}"
                     elif bot_id == "MOM":
                         # Fallback if rubberband encounters an issue
-                        fallback_filter = "atempo=0.83,equalizer=f=280:t=q:w=1.2:g=4.0,equalizer=f=4500:t=q:w=1:g=-4.0"
+                        fallback_filter = "atempo=0.96,equalizer=f=300:t=q:w=1.2:g=2.5,equalizer=f=4500:t=q:w=1:g=-2.5"
                         res2 = subprocess.run([
                             FFMPEG_EXE, "-y", "-i", tmp_path,
                             "-af", fallback_filter,

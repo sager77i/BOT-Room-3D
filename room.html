@@ -1485,7 +1485,7 @@ function fallbackSpeech(bot, text) {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "th-TH";
     if (thVoice) u.voice = thVoice;
-    if (bot === "MOM") { u.pitch = 0.92; u.rate = 0.82; }
+    if (bot === "MOM") { u.pitch = 0.95; u.rate = 0.96; }
     else if (bot === "JOY") { u.pitch = 1.35; u.rate = 1.05; }
     else if (bot === "SAGE") { u.pitch = 0.95; u.rate = 0.95; }
     else if (bot === "CHILL") { u.pitch = 1.05; u.rate = 0.95; }
