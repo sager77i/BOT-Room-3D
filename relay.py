@@ -29,7 +29,7 @@ BOTS = [
         "id": "MOM",
         "name": "อาม้า",
         "color": "#fb7185",
-        "persona": "อาม้า คนแม่ผู้ให้กำเนิดและเป็นผู้ก่อตั้งร้าน Sujiraporn Cafe' เป็นหญิงสูงอายุมาก ใจดี อบอุ่น มีเมตตา ยืนชงกาแฟอยู่ที่เคาน์เตอร์คอยพูดแทรกย้ำเตือนสติลูกๆ อยู่เสมอเรื่องความเสี่ยงในการใช้ชีวิตและการเงิน อย่าหลงเชื่อข่าวง่ายๆ มีสติ ไม่ทะเลาะเรื่องเมือง",
+        "persona": "อาม้า คนแม่ผู้ให้กำเนิดและเป็นผู้ก่อตั้งร้าน Sujiraporn Cafe\' เป็นหญิงชราสูงอายุมาก (คุณยาย/อาม้าแก่) ใจดี อบอุ่น มีเมตตา ยืนชงกาแฟอยู่ที่เคาน์เตอร์ พูดจาเนิบช้า สุภาพ อ่อนโยน เอ็นดูลูกๆ มักเรียกผู้ฟังว่า \'ลูกๆ\', \'ลูกเอ๊ย\', \'ลูกจ๋า\' ใช้คำลงท้ายของผู้หญิงสูงวัย เช่น \'นะลูก\', \'จ้ะ\', \'จ๊ะ\', \'นะคะ\', \'ค่ะ\' (ห้ามพูดคำว่า \'ครับ\' หรือ \'นะครับ\' เด็ดขาด!) คอยเตือนสติลูกๆ เรื่องชีวิตและการเงิน อย่าหลงเชื่อข่าวง่ายๆ มีสติ ไม่ทะเลาะเรื่องการเมือง",
     },
     {
         "id": "BOSS",
@@ -41,7 +41,7 @@ BOTS = [
         "id": "JOY",
         "name": "ตู่",
         "color": "#ffaa23",
-        "persona": "ตู่ พี่สาวคนรองในร่างซูเปอร์ไซย่าสาว นิสัยสายฮาพลังล้นเหลือ ชอบติดตามข่าวการเมือง พรรคการเมือง การเลือกตั้ง และกระแสสังคมมาเล่าให้พี่น้องฟังอย่างออกรสออกชาติ",
+        "persona": "ตู่ พี่สาวคนรองในร่างซูเปอร์ไซย่าสาว นิสัยสายฮาพลังล้นเหลือ ชอบติดตามข่าวการเมือง พรรคการเมือง การเลือกตั้ง และกระแสสังคมมาเล่าให้พี่น้องฟังอย่างออกรสออกชาติ พูดจาฉะฉาน สนุกสนาน ใช้คำลงท้ายของผู้หญิง เช่น \'ค่ะ\', \'คะ\', \'นะจ๊ะ\', \'จ้า\' (ห้ามพูดคำว่า \'ครับ\' หรือ \'นะครับ\' เด็ดขาด!)",
     },
     {
         "id": "SAGE",
@@ -149,7 +149,7 @@ HEADER = (
     "- หัวข้อและประเด็นสนทนา: ให้พูดคุยแลกเปลี่ยนความคิดเห็นเกี่ยวกับ 'ประเด็น Talk of The Town สดใหม่รอบนี้' อย่างมีชีวิตชีวา มีประเด็นใหม่ๆ ตลอดเวลา ไม่พูดวนเรื่องเดิมซ้ำๆ และต่อบทสนทนากันอย่างอบอุ่นในครอบครัว "
     "- เปลี่ยนเรื่องคุยตลอด: หากในบทสนทนาที่ผ่านมาเริ่มคุยเรื่องเดิมไป 1-2 รอบแล้ว ให้หยิบยกประเด็นข่าว Talk of The Town ใหม่ที่ระบุในหัวข้อขึ้นมาเปิดประเด็นหรือชวนพี่น้องคุยต่อทันที ห้ามพูดเรื่องเดิมซ้ำซาก! "
     "- การเขียนตัวเลข: ทุกครั้งที่มีการเอ่ยถึงตัวเลข (เช่น วันที่ เวลา สถิติ คะแนนเสียง มาตรากฎหมาย) ให้เขียนเป็นตัวเลขอารบิก 1, 2, 3... เสมอ ห้ามเขียนเป็นตัวหนังสือภาษาไทย เช่น มาตรา 157 หรือ วันที่ 20 "
-    "- ภาษาที่ใช้ในบทสนทนา: ให้ใช้ภาษาไทยทั้งหมดเป็นหลัก ยกเว้นคำทับศัพท์ภาษาอังกฤษหรือชื่อเฉพาะที่นิยมใช้ทั่วไป (เช่น Talk of The Town, PR, AI, Live, App, Online, Social Media, Content, Trend, Soft Power, Check and Balance เป็นต้น) สามารถเขียนเป็นภาษาอังกฤษหรือทับศัพท์ได้ตามความเหมาะสม ให้บทสนทนาฟังดูเป็นธรรมชาติ "
+    "- การใช้คำลงท้ายตามเพศ: \'อาม้า\' และ \'ตู่\' เป็นผู้หญิงแท้ 100% ต้องใช้คำลงท้ายของผู้หญิงเท่านั้น เช่น \'ค่ะ\', \'คะ\', \'นะลูก\', \'จ้ะ\', \'จ้า\' (ห้ามพูด \'ครับ\', \'นะครับ\', \'คับ\' หรือคำของผู้ชายเด็ดขาด!) ส่วน ไถ่, อั่งม้อ, หม่อตี๋ เป็นผู้ชาย ให้ใช้ \'ครับ\' เสมอ " \\\n    "- ภาษาที่ใช้ในบทสนทนา: ให้ใช้ภาษาไทยทั้งหมดเป็นหลัก ยกเว้นคำทับศัพท์ภาษาอังกฤษหรือชื่อเฉพาะที่นิยมใช้ทั่วไป (เช่น Talk of The Town, PR, AI, Live, App, Online, Social Media, Content, Trend, Soft Power, Check and Balance เป็นต้น) สามารถเขียนเป็นภาษาอังกฤษหรือทับศัพท์ได้ตามความเหมาะสม ให้บทสนทนาฟังดูเป็นธรรมชาติ "
     "- ทุกครั้งระบบจะอ่านออกเสียงเป็นภาษาไทยเท่านั้น ห้ามอ่านออกเสียงภาษาอังกฤษเด็ดขาด "
     "- ห้ามใส่ไอคอนอีโมจิ (เช่น ☕️, 😎, 😂, ⚡) ใดๆ ทั้งสิ้นในข้อความเด็ดขาด ให้เป็นข้อความตัวอักษรล้วนเท่านั้น! "
     "- ห้ามพูดข้อความซ้ำหรือก๊อปปี้ประโยคที่เคยพูดไปแล้วเด็ดขาด: ต้องมีมุมมองใหม่ ประเด็นใหม่ หรือตอบรับคำพูดล่าสุดของเพื่อนอย่างสร้างสรรค์เสมอ "
@@ -332,6 +332,20 @@ def clean(raw, bot_id=None):
     text = re.sub(r'[\s,]+(และ|หรือ|กับ|ว่า|ที่|ได้|อย่า|เรื่อง|แต่|ของ|ใน|ถ้า|ก็|โดยเฉพาะ|เช่น|ครับเรื่อง|ค่ะเรื่อง|นะลูกเรื่อง)[\s\.\-]*$', '', text)
     text = re.sub(r'[\s\-เแโใไ]+$', '', text)
 
+        # Sanitize gender particles for female bots
+    if bot_id == "MOM":
+        text = re.sub(r'นะครับ|นะคับ', 'นะลูก', text)
+        text = re.sub(r'ครับผม|คับผม', 'จ้ะลูก', text)
+        text = re.sub(r'อ่ะครับ|อะครับ|อ่ะคับ|อะคับ', 'จ้ะ', text)
+        text = re.sub(r'ครับ', 'ค่ะ', text)
+        text = re.sub(r'(?<![บัง])คับ(?![คั่งแคบ])', 'ค่ะ', text)
+    elif bot_id == "JOY":
+        text = re.sub(r'นะครับ|นะคับ', 'นะจ๊ะ', text)
+        text = re.sub(r'ครับผม|คับผม', 'ค่ะ', text)
+        text = re.sub(r'อ่ะครับ|อะครับ|อ่ะคับ|อะคับ', 'ค่ะ', text)
+        text = re.sub(r'ครับ', 'ค่ะ', text)
+        text = re.sub(r'(?<![บัง])คับ(?![คั่งแคบ])', 'ค่ะ', text)
+    
     text = re.sub(r'\s{2,}', ' ', text).strip()
     # ตรวจสอบความบริสุทธิ์ของภาษาไทย: สัดส่วนตัวอักษรไทยต้องไม่น้อยกว่า 70%
     thai_letters = len(re.findall(r'[\u0e00-\u0e7f]', text))
@@ -498,7 +512,7 @@ def make_audio(bot_id, text):
         if not safe_text:
             return None
 
-        h = hashlib.md5((bot_id + safe_text + "real_female_v3").encode("utf-8")).hexdigest()[:12]
+        h = hashlib.md5((bot_id + safe_text + "elder_female_v4").encode("utf-8")).hexdigest()[:12]
         fname = f"msg_{bot_id.lower()}_{h}.mp3"
         fpath = os.path.join(AUDIO_DIR, fname)
         if os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
@@ -516,9 +530,11 @@ def make_audio(bot_id, text):
                 # MOM: calm, warm maternal pace with acoustic EQ
                 # JOY: lively, bright energetic pace with acoustic EQ
                 if bot_id == "MOM":
-                    filter_str = "atempo=0.92,equalizer=f=350:t=q:w=1:g=2.5"
+                    # Elderly female voice: slightly lower pitch, slower tempo, warm chest resonance, soft highs
+                    filter_str = "rubberband=pitch=0.88:tempo=0.83:formant=preserved:pitchq=quality,equalizer=f=320:t=q:w=1:g=3.5,equalizer=f=4500:t=q:w=1:g=-3.0"
                 else:
-                    filter_str = "atempo=1.08,equalizer=f=2500:t=q:w=1:g=2.5"
+                    # Young female voice: lively, energetic tempo with treble clarity
+                    filter_str = "atempo=1.06,equalizer=f=2500:t=q:w=1:g=2.5"
 
                 if FFMPEG_EXE and os.path.exists(FFMPEG_EXE):
                     res = subprocess.run([
@@ -530,6 +546,18 @@ def make_audio(bot_id, text):
                         try: os.remove(tmp_path)
                         except Exception: pass
                         return f"audio/{fname}"
+                    elif bot_id == "MOM":
+                        # Fallback if rubberband encounters an issue
+                        fallback_filter = "atempo=0.83,equalizer=f=280:t=q:w=1.2:g=4.0,equalizer=f=4500:t=q:w=1:g=-4.0"
+                        res2 = subprocess.run([
+                            FFMPEG_EXE, "-y", "-i", tmp_path,
+                            "-af", fallback_filter,
+                            fpath
+                        ], capture_output=True, timeout=15)
+                        if res2.returncode == 0 and os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
+                            try: os.remove(tmp_path)
+                            except Exception: pass
+                            return f"audio/{fname}"
 
                 if os.path.exists(tmp_path):
                     os.replace(tmp_path, fpath)
