@@ -1433,7 +1433,7 @@ if (testBtn) {
     unlockAudio(e);
     const sample = TEST_SAMPLES[testIdx % TEST_SAMPLES.length];
     testIdx++;
-    testBtn.textContent = "🎙 " + (sample.bot === "MOM" ? "ม้า (หญิงสูงอายุ)" : sample.bot === "JOY" ? "ตู่ (หญิงวัยกลางคน)" : sample.bot);
+    testBtn.textContent = "🎙 " + (sample.bot === "MOM" ? "อาม้า (หญิงสูงอายุ)" : sample.bot === "JOY" ? "ตู่ (หญิงวัยกลางคน)" : sample.bot);
     active = { bot: sample.bot, text: sample.text, audio: sample.audio };
     bubbleUntil = millis() + 9000;
     typed = 0;
@@ -1485,10 +1485,11 @@ function fallbackSpeech(bot, text) {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "th-TH";
     if (thVoice) u.voice = thVoice;
-    if (bot === "MOM") { u.pitch = 0.8; u.rate = 0.82; }
-    else if (bot === "JOY") { u.pitch = 0.95; u.rate = 0.95; }
-    else if (bot === "SAGE") { u.pitch = 0.85; u.rate = 0.95; }
-    else { u.pitch = 1.0; u.rate = 0.92; }
+    if (bot === "MOM") { u.pitch = 1.30; u.rate = 0.88; }
+    else if (bot === "JOY") { u.pitch = 1.42; u.rate = 0.96; }
+    else if (bot === "SAGE") { u.pitch = 0.95; u.rate = 0.95; }
+    else if (bot === "CHILL") { u.pitch = 1.05; u.rate = 0.95; }
+    else { u.pitch = 0.90; u.rate = 0.92; }
     speechSynthesis.speak(u);
   } catch (e) {}
 }

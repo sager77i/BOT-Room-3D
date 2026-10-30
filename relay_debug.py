@@ -392,11 +392,11 @@ os.makedirs(AUDIO_DIR, exist_ok=True)
 FFMPEG_EXE = r"C:\Users\PONG\AppData\Local\hermes\tools\ffmpeg-9.0.1-win32-x64\bin\ffmpeg.EXE"
 
 VOICE_CONFIG = {
-    "MOM": {"voice": "th-TH-PremwadeeNeural", "rate": "-8%", "pitch_factor": 1.0},
+    "MOM": {"voice": "th-TH-NiwatNeural", "rate": "-4%", "pitch_factor": 1.30},
+    "JOY": {"voice": "th-TH-NiwatNeural", "rate": "+0%", "pitch_factor": 1.42},
     "BOSS": {"voice": "th-TH-NiwatNeural", "rate": "-4%", "pitch_factor": 0.95},
-    "SAGE": {"voice": "th-TH-NiwatNeural", "rate": "+0%", "pitch_factor": 1.0},
-    "JOY": {"voice": "th-TH-PremwadeeNeural", "rate": "-5%", "pitch_factor": 0.94},
-    "CHILL": {"voice": "th-TH-NiwatNeural", "rate": "-8%", "pitch_factor": 1.05},
+    "SAGE": {"voice": "th-TH-NiwatNeural", "rate": "+0%", "pitch_factor": 1.00},
+    "CHILL": {"voice": "th-TH-NiwatNeural", "rate": "-6%", "pitch_factor": 1.06},
 }
 
 def make_audio(bot_id, text):
